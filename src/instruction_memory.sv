@@ -1,7 +1,7 @@
 import risc_v_32_i_pkg::*;
 
 
-module instruction_memory #(parameter INIT_FILE) (
+module instruction_memory #(parameter INIT_FILE="") (
   output logic [31:0] instruction_data_o,
   input logic [31:0] instruction_address_i
   );

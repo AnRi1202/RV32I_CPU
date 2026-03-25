@@ -1,10 +1,10 @@
 import risc_v_32_i_pkg::*;
 
 
-module alu #(paramter XLEN = 32, parameter REG_ADDR_WIDTH=5) (
+module alu #(parameter XLEN = 32, parameter REG_ADDR_WIDTH=5) (
   input logic [XLEN-1:0] alu_port_a_i,
   input logic [XLEN-1:0] alu_port_b_i,
-  input op_t alu_op_i,
+  input op_alu_t alu_op_i,
   output logic [XLEN-1:0] alu_o
   );
   
