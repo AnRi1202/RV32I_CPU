@@ -2,6 +2,7 @@ TOPLEVEL_LANG = verilog
 SIM = icarus # Change your simlator
 
 VERILOG_SOURCES = ../src/risc_v_32_i_pkg.sv \
+									../src/program_counter.sv \
 									../src/cpu.sv \
 									../src/instruction_memory.sv \
 									../src/field_extraction.sv \

@@ -3,11 +3,14 @@ module cpu #(
   parameter [8*256-1:0] IMEM_FILE="",
   parameter [8*256-1:0] DMEM_FILE=""
 ) (
-  input logic clk_i, rst_i,
+  input logic clk_i, rst_n_i,
   input logic [XLEN-1:0] write_data_i,
   input logic [31:0] data_address_i,
   output logic write_enable_o
   );
+  // for program_counter
+  logic [31:0] next_pc;
+  logic [31:0] pc;
   // for imem
   logic [31:0] instruction_address;
   logic [31:0] instruction_data;
@@ -27,7 +30,15 @@ module cpu #(
   logic [XLEN-1:0] alu_port_b;
   logic alu_op;
   logic [XLEN-1:0] alu_output;
+  // instance
 
+  assign next_pc = pc + 32'd4;
+  program_counter program_counter(
+    .clk_i(clk_i),
+    .rst_n_i(rst_n_i),
+    .next_pc_i(next_pc),
+    .pc_o(pc)
+  );
   instruction_memory #(.INIT_FILE(IMEM_FILE)) imem(
     .instruction_address_i(instruction_address),
     .instruction_data_o(instruction_data)
