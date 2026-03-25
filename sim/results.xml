@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1774443081" />
+    <testcase name="tb_cpu" classname="tb_cpu" file="/Users/rikutoide/dev/asic/cpu/tb/tb_cpu.py" lineno="6" time="0.001010894775390625" sim_time_ns="140.0" ratio_time="138491.16981132075" />
+  </testsuite>
+</testsuites>
