@@ -19,6 +19,7 @@ module cpu #(
     .instruction_address_i(instruction_address),
     .instruction_data_o(instruction_data)
   );
+
   data_memory #(
     .XLEN(XLEN),
     .INIT_FILE(DMEM_FILE)
@@ -29,4 +30,11 @@ module cpu #(
     .write_enable_i(write_enable),
     .read_data_o(read_data)
     );
+
+  alu #(
+    .XLEN(XLEN),
+    .REG_ADDR_WIDTH(5)
+  ) (
+    .alu_port_a_i()
+  );
 endmodule
