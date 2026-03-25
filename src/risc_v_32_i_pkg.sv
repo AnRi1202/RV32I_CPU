@@ -41,14 +41,17 @@ typedef enum logic [ALU_OP_LEN-1:0]{
   // OP_SLT,
   // OP_SLTU
   //
-  OP_BEQ,
-  OP_BNE,
-  OP_BLTU,
-  OP_BGEU,
-  OP_BLT,
-  OP_BGE,
-
   OP_NONE
   } op_alu_t;
+
+typedef enum logic [4:0] {
+  OP_BEQ,
+  OP_BNE,
+  OP_BLT,
+  OP_BGE,
+  OP_BLTU,
+  OP_BGEU
+  } op_branch_t;
 endpackage
+
 

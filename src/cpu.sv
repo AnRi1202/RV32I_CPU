@@ -1,3 +1,4 @@
+import risc_v_32_i_pkg::*;
 module cpu #(
   parameter int XLEN=32,
   parameter [8*256-1:0] IMEM_FILE="",
@@ -15,7 +16,7 @@ module cpu #(
   logic [31:0] instruction_address;
   logic [31:0] instruction_data;
   // for field extraction
-  logic [6:0] opcode;
+  opcode_t opcode;
   logic [4:0] rd;
   logic [4:0] rs1;
   logic [4:0] rs2;
@@ -28,7 +29,7 @@ module cpu #(
   // for alu
   logic [XLEN-1:0] alu_port_a;
   logic [XLEN-1:0] alu_port_b;
-  logic alu_op;
+  op_alu_t alu_op;
   logic [XLEN-1:0] alu_output;
   // instance
 

@@ -1,6 +1,7 @@
+import risc_v_32_i_pkg::*;
 module field_extraction(
   input logic [31:0] instruction_i,
-  output logic [6:0] opcode_o,
+  output opcode_t  opcode_o,
   output logic [4:0] rd_o,
   output logic [4:0] rs1_o,
   output logic [4:0] rs2_o,
@@ -8,7 +9,7 @@ module field_extraction(
   output logic [6:0] funct7_o,
   output logic [31:7] imm_fileds_o
 );
-  assign opcode_o = instruction_i[6:0];
+  assign opcode_o = opcode_t'(instruction_i[6:0]);
   assign rd_o     = instruction_i[11:7];
   assign rs1_o    = instruction_i[19:15];
   assign rs2_o    = instruction_i[24:20];
