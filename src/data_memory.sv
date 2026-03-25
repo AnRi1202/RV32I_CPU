@@ -1,7 +1,10 @@
 import risc_v_32_i_pkg::*;
 
 
-module data_memory#(parameter int XLEN=32,parameter INIT_FILE="")(
+module data_memory#(
+  parameter int XLEN=32,
+  parameter [8*256-1:0] INIT_FILE=""
+)(
   input logic [31:0] address_i,
   input logic [XLEN-1:0] write_data_i,
   input logic clk_i,

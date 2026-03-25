@@ -12,7 +12,12 @@ COCOTB_TEST_MODULES = tb_cpu
 
 export PYTHONPATH := ../tb
 
+IMEM_FILE ?= ../tb/hex/r_test.txt
+DMEM_FILE ?=
+
 
 COMPILE_ARGS += -g2012
+COMPILE_ARGS += -Pcpu.IMEM_FILE=\"$(IMEM_FILE)\"
+COMPILE_ARGS += -Pcpu.DMEM_FILE=\"$(DMEM_FILE)\"
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
