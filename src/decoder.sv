@@ -8,9 +8,9 @@ module decoder(
   input logic [24:0] imm_fields_i,
   output logic alu_port_a_sel_o, //rs1 or pc
   output logic alu_port_b_sel_o, //rs2 or imm
-  output op_alu_t alu_op_sel_o
+  output op_alu_t alu_op_sel_o,
+  output logic reg_we_o
   // output op_branch_t branch_op_sel_o
-  // output logic reg_we,
   // output logic [2:0] is_load,
   // output logic [1:0] is_store
 );
@@ -22,6 +22,7 @@ module decoder(
     alu_op_sel_o = OP_NONE;
     alu_port_a_sel_o =1'b0;
     alu_port_b_sel_o =1'b0;
+    reg_we_o = 1'b0;
     unique case(op_code_i)
       OP_R_TYPE: begin
         unique case({funct7_bit5,funct3_i})
@@ -59,6 +60,11 @@ module decoder(
         // endcase
       // end
       default: $error("can't handle this operation rn"); // WIP
+    endcase
+
+    unique case(op_code_i)
+      OP_R_TYPE, OP_I_ALU_TYPE: reg_we_o = 1'b1;
+      default: reg_we_o = 1'b00;
     endcase
   end
 endmodule
