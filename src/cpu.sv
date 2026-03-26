@@ -2,8 +2,7 @@ import risc_v_32_i_pkg::*;
 module cpu #(
   parameter int XLEN=32,
   parameter int REG_ADDR_WIDTH=5,
-  parameter [8*256-1:0] IMEM_FILE="",
-  parameter [8*256-1:0] DMEM_FILE=""
+  parameter [8*256-1:0] IMEM_FILE=""
 ) (
   input logic clk_i, rst_n_i,
   input logic [XLEN-1:0] write_data_i,
@@ -28,9 +27,6 @@ module cpu #(
   logic alu_port_b_sel;
   op_alu_t alu_op_sel;
   logic reg_we;
-  // for dmem
-  logic write_enable;
-  logic [XLEN-1:0] read_data;
   // for regfile
   logic [XLEN-1:0] read_data_1;
   logic [XLEN-1:0] read_data_2;
@@ -94,17 +90,5 @@ module cpu #(
     .alu_op_i(alu_op),
     .alu_o(alu_output)
   );
-
-  data_memory #(
-    .XLEN(XLEN),
-    .INIT_FILE(DMEM_FILE)
-  ) dmem(
-    .address_i(data_address_i),
-    .write_data_i(write_data_i),
-    .clk_i(clk_i),
-    .write_enable_i(write_enable),
-    .read_data_o(read_data)
-    );
-
 
 endmodule
