@@ -7,6 +7,7 @@ VERILOG_SOURCES = ../src/risc_v_32_i_pkg.sv \
 									../src/instruction_memory.sv \
 									../src/field_extraction.sv \
 									../src/decoder.sv \
+									../src/regfile.sv \
 									../src/data_memory.sv \
 									../src/alu.sv
 

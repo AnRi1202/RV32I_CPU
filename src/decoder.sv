@@ -61,10 +61,10 @@ module decoder(
       // end
       default: $error("can't handle this operation rn"); // WIP
     endcase
-
+    //reg_we
     unique case(op_code_i)
       OP_R_TYPE, OP_I_ALU_TYPE: reg_we_o = 1'b1;
-      default: reg_we_o = 1'b00;
+      default: reg_we_o = 1'b0;
     endcase
   end
 endmodule

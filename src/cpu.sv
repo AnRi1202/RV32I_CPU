@@ -31,6 +31,9 @@ module cpu #(
   // for dmem
   logic write_enable;
   logic [XLEN-1:0] read_data;
+  // for regfile
+  logic [XLEN-1:0] read_data_1;
+  logic [XLEN-1:0] read_data_2;
   // for alu
   logic [XLEN-1:0] alu_port_a;
   logic [XLEN-1:0] alu_port_b;
@@ -70,6 +73,17 @@ module cpu #(
     .alu_port_b_sel_o(alu_port_b_sel),
     .alu_op_sel_o(alu_op_sel),
     .reg_we_o(reg_we)
+    );
+  regfile #(.XLEN(XLEN),.REG_ADDR_WIDTH(REG_ADDR_WIDTH))
+  rf(
+    .clk_i(clk),
+    .reg_we_i(reg_we),
+    .write_data_i(alu_output),
+    .write_address_i(rd),
+    .read_address_1_i(rs1),
+    .read_address_2_i(rs2),
+    .read_data_1_o(read_data_1),
+    .read_data_2_o(read_data_2)
     );
 
   alu #(
