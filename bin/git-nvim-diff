@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+
+set -euo pipefail
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "git not found" >&2
+  exit 1
+fi
+
+if ! command -v nvim >/dev/null 2>&1; then
+  echo "nvim not found" >&2
+  exit 1
+fi
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+Usage:
+  bin/git-nvim-diff [git diff arguments...]
+
+Examples:
+  bin/git-nvim-diff
+  bin/git-nvim-diff --cached
+  bin/git-nvim-diff HEAD~1 HEAD -- src/decoder.sv
+
+This wraps `git difftool` and opens each file diff in `nvim -d`.
+EOF
+  exit 0
+fi
+
+git difftool --no-prompt --extcmd='nvim -d' "$@"

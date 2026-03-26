@@ -13,7 +13,6 @@ module cpu #(
   logic [31:0] next_pc;
   logic [31:0] pc;
   // for imem
-  logic [31:0] instruction_address;
   logic [31:0] instruction_data;
   // for field extraction
   opcode_t opcode;
@@ -23,6 +22,10 @@ module cpu #(
   logic [2:0] funct3;
   logic [6:0] funct7;
   logic [31:7] imm_fileds;
+  // for decoder
+  logic alu_port_a_sel;
+  logic alu_port_b_sel;
+  op_alu_t alu_op_sel;
   // for dmem
   logic write_enable;
   logic [XLEN-1:0] read_data;
@@ -41,7 +44,7 @@ module cpu #(
     .pc_o(pc)
   );
   instruction_memory #(.INIT_FILE(IMEM_FILE)) imem(
-    .instruction_address_i(instruction_address),
+    .instruction_address_i(pc),
     .instruction_data_o(instruction_data)
   );
 
@@ -54,6 +57,15 @@ module cpu #(
     .funct3_o(funct3),
     .funct7_o(funct7),
     .imm_fileds_o(imm_fileds)
+    );
+  decoder dec(
+    .op_code_i(opcode),
+    .funct3_i(funct3),
+    .funct7_i(funct7),
+    .imm_fields_i(imm_fileds),
+    .alu_port_a_sel_o(alu_port_a_sel),
+    .alu_port_b_sel_o(alu_port_b_sel),
+    .alu_op_sel_o(alu_op_sel)
     );
 
   data_memory #(

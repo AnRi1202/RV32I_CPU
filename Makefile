@@ -6,7 +6,7 @@ TB_DIR      := tb/hex
 ASM_SRCS    := $(wildcard $(TB_DIR)/*.s)
 HEX_TARGETS := $(ASM_SRCS:.s=.txt)
 
-.PHONY: all asm clean FORCE
+.PHONY: all asm clean FORCE nvimdiff
 
 all: asm
 
@@ -25,3 +25,6 @@ $(TB_DIR)/%.txt: $(TB_DIR)/%.bin FORCE
 
 clean:
 	rm -f $(TB_DIR)/*.o $(TB_DIR)/*.bin $(TB_DIR)/*.txt
+
+nvimdiff:
+	./bin/git-nvim-diff

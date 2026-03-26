@@ -15,3 +15,14 @@ IMEM_FILE = hoge.txt
 ```
 You can also configure `DMEM_FILE = hoge.txt` if you want.
 
+### Git Diff In Neovim
+Open the current Git diff with Neovim's diff view:
+```sh
+make nvimdiff
+```
+
+Or call the wrapper directly when you want Git diff options such as `--cached` or a commit range:
+```sh
+bin/git-nvim-diff --cached
+bin/git-nvim-diff HEAD~1 HEAD -- src/decoder.sv
+```
