@@ -2,7 +2,8 @@ import risc_v_32_i_pkg::*;
 module cpu #(
   parameter int XLEN=32,
   parameter int REG_ADDR_WIDTH=5,
-  parameter [8*256-1:0] IMEM_FILE=""
+  parameter [8*256-1:0] IMEM_FILE="",
+  parameter [8*256-1:0] DMEM_FILE=""
 ) (
   input logic clk_i, rst_n_i,
   input logic [XLEN-1:0] write_data_i,
@@ -26,10 +27,8 @@ module cpu #(
   logic alu_port_a_sel;
   logic alu_port_b_sel;
   op_alu_t alu_op_sel;
-  logic reg_we;
   // for regfile
-  logic [XLEN-1:0] read_data_1;
-  logic [XLEN-1:0] read_data_2;
+  logic [XLEN-1:0] read_data_1, read_data_2;
   // for alu
   logic [XLEN-1:0] alu_port_a;
   logic [XLEN-1:0] alu_port_b;
@@ -49,8 +48,7 @@ module cpu #(
     .instruction_data_o(instruction_data)
   );
 
-  field_extraction #(.REG_ADDR_WIDTH(REG_ADDR_WIDTH))
-  fe(
+  field_extraction fe(
     .instruction_i(instruction_data),
     .opcode_o(opcode),
     .rd_o(rd),
@@ -68,26 +66,34 @@ module cpu #(
     .alu_port_a_sel_o(alu_port_a_sel),
     .alu_port_b_sel_o(alu_port_b_sel),
     .alu_op_sel_o(alu_op_sel),
-    .reg_we_o(reg_we)
-    );
-  regfile #(.XLEN(XLEN),.REG_ADDR_WIDTH(REG_ADDR_WIDTH))
-  rf(
-    .clk_i(clk),
-    .reg_we_i(reg_we),
-    .write_data_i(alu_output),
-    .write_address_i(rd),
-    .read_address_1_i(rs1),
-    .read_address_2_i(rs2),
-    .read_data_1_o(read_data_1),
-    .read_data_2_o(read_data_2)
+    .reg_we_o(reg_we),
+    .imm_o(imm)
     );
 
+  regfile #(
+      .XLEN(XLEN),
+      .REG_ADDR_WIDTH(REG_ADDR_WIDTH)
+    )
+  rf(
+      .clk_i(clk_i),
+      .reg_we_i(reg_we),
+      .write_data_i(alu_output),
+      .write_address_i(rd),
+      .read_address_1_i(rs1),
+      .read_address_2_i(rs2),
+      .read_data_1_o(read_data_1),
+      .read_data_2_o(read_data_2)
+    );
+    assign alu_port_a = read_data_1;
+    assign alu_port_b = (alu_port_b_sel == 1'b0)
+                  ? read_data_2
+                  : {{(XLEN-32){1'b0}}, imm};
   alu #(
     .XLEN(XLEN)
   ) alu(
     .alu_port_a_i(alu_port_a),
     .alu_port_b_i(alu_port_b),
-    .alu_op_i(alu_op),
+    .alu_op_sel_i(alu_op_sel),
     .alu_o(alu_output)
   );
 

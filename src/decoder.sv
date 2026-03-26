@@ -9,10 +9,11 @@ module decoder(
   output logic alu_port_a_sel_o, //rs1 or pc
   output logic alu_port_b_sel_o, //rs2 or imm
   output op_alu_t alu_op_sel_o,
-  output logic reg_we_o
+  output logic reg_we_o,
   // output op_branch_t branch_op_sel_o
   // output logic [2:0] is_load,
   // output logic [1:0] is_store
+  output logic [31:0] imm_o
 );
   logic funct7_bit5;
   assign funct7_bit5 = funct7_i[5];
@@ -65,6 +66,12 @@ module decoder(
     unique case(op_code_i)
       OP_R_TYPE, OP_I_ALU_TYPE: reg_we_o = 1'b1;
       default: reg_we_o = 1'b0;
+    endcase
+
+    //imm
+    unique case(op_code_i)
+      OP_I_ALU_TYPE: imm_o = $signed({7'b0,imm_fields_i});
+      default: imm_o = 32'b0;
     endcase
   end
 endmodule

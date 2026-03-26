@@ -6,11 +6,11 @@ module alu #(
             ) (
   input logic [XLEN-1:0] alu_port_a_i,
   input logic [XLEN-1:0] alu_port_b_i,
-  input op_alu_t alu_op_i,
+  input op_alu_t alu_op_sel_i,
   output logic [XLEN-1:0] alu_o
   );
   always_comb begin
-    unique case (alu_op_i)
+    unique case (alu_op_sel_i)
       OP_ADD: alu_o = alu_port_a_i + alu_port_b_i;
       OP_SUB: alu_o = alu_port_a_i - alu_port_b_i;
       OP_AND: alu_o = alu_port_a_i & alu_port_b_i;
