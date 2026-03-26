@@ -48,7 +48,8 @@ module cpu #(
     .instruction_data_o(instruction_data)
   );
 
-  field_extraction fe(
+  field_extraction #(.REG_ADDR_WIDTH(REG_ADDR_WIDTH))
+  fe(
     .instruction_i(instruction_data),
     .opcode_o(opcode),
     .rd_o(rd),
@@ -68,6 +69,16 @@ module cpu #(
     .alu_op_sel_o(alu_op_sel)
     );
 
+  alu #(
+    .XLEN(XLEN),
+    .REG_ADDR_WIDTH(5)
+  ) alu(
+    .alu_port_a_i(alu_port_a),
+    .alu_port_b_i(alu_port_b),
+    .alu_op_i(alu_op),
+    .alu_o(alu_output)
+  );
+
   data_memory #(
     .XLEN(XLEN),
     .INIT_FILE(DMEM_FILE)
@@ -79,13 +90,5 @@ module cpu #(
     .read_data_o(read_data)
     );
 
-  alu #(
-    .XLEN(XLEN),
-    .REG_ADDR_WIDTH(5)
-  ) alu(
-    .alu_port_a_i(alu_port_a),
-    .alu_port_b_i(alu_port_b),
-    .alu_op_i(alu_op),
-    .alu_o(alu_output)
-  );
+
 endmodule

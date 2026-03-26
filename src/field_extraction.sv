@@ -1,10 +1,10 @@
 import risc_v_32_i_pkg::*;
-module field_extraction(
+module field_extraction#(parameter int REG_ADDR_WIDTH=5)(
   input logic [31:0] instruction_i,
   output opcode_t  opcode_o,
-  output logic [4:0] rd_o,
-  output logic [4:0] rs1_o,
-  output logic [4:0] rs2_o,
+  output logic [REG_ADDR_WIDTH-1:0] rd_o,
+  output logic [REG_ADDR_WIDTH-1:0] rs1_o,
+  output logic [REG_ADDR_WIDTH-1:0] rs2_o,
   output logic [2:0] funct3_o,
   output logic [6:0] funct7_o,
   output logic [31:7] imm_fileds_o
