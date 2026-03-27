@@ -26,16 +26,6 @@ typedef enum logic [ALU_OP_LEN-1:0]{
   OP_SRA,
   OP_SLT,
   OP_SLTU,
-  // IMM_TYPE
-  OP_ADDI,
-  OP_XORI,
-  OP_ORI,
-  OP_ANDI,
-  OP_SLLI,
-  OP_SRLI,
-  OP_SRAI,
-  OP_SLTI,
-  OP_SLTIU,
   OP_NONE
   } op_alu_t;
 

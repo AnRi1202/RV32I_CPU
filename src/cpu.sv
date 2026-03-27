@@ -27,6 +27,8 @@ module cpu #(
   logic alu_port_a_sel;
   logic alu_port_b_sel;
   op_alu_t alu_op_sel;
+  logic reg_we;
+  logic [31:0] imm;
   // for regfile
   logic [XLEN-1:0] read_data_1, read_data_2;
   // for alu

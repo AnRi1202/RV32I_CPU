@@ -4,7 +4,7 @@ module regfile#(
   (
   input logic clk_i,
   input logic reg_we_i,
-  input logic write_data_i,
+  input logic [XLEN-1:0] write_data_i,
   input logic [REG_ADDR_WIDTH-1:0] write_address_i,
   input logic [REG_ADDR_WIDTH-1:0] read_address_1_i,
   input logic [REG_ADDR_WIDTH-1:0] read_address_2_i,
