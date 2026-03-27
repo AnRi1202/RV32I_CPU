@@ -25,7 +25,7 @@ module decoder(
     alu_port_b_sel_o =1'b0;
     reg_we_o = 1'b0;
     unique case(op_code_i)
-      OP_R_TYPE, OP_I_ALU_TYPE: begin
+      OP_R_TYPE: begin
         unique case({funct7_bit5,funct3_i})
           4'b0000: alu_op_sel_o = OP_ADD;
           4'b1000: alu_op_sel_o = OP_SUB;
@@ -40,12 +40,29 @@ module decoder(
           default: alu_op_sel_o = OP_NONE;
         endcase
       end
+      OP_I_ALU_TYPE: begin
+        alu_port_b_sel_o = 1'b1;
+        unique case(funct3_i)
+          3'b000: alu_op_sel_o = OP_ADD;
+          3'b001: alu_op_sel_o = OP_SLL;
+          3'b010: alu_op_sel_o = OP_SLT;
+          3'b011: alu_op_sel_o = OP_SLTU;
+          3'b100: alu_op_sel_o = OP_XOR;
+          3'b101: begin
+            if (funct7_bit5) alu_op_sel_o = OP_SRA;
+            else alu_op_sel_o = OP_SRL;
+          end
+          3'b110: alu_op_sel_o = OP_OR;
+          3'b111: alu_op_sel_o = OP_AND;
+          default: alu_op_sel_o = OP_NONE;
+        endcase
+      end
       // OP_I_LOAD_TYPE: begin
         // unique case(funct3_i)
         //   3'b000: is_load = OP_LB;
         // endcase
       // end
-      default: $error("can't handle this operation rn"); // WIP
+      default: alu_op_sel_o = OP_NONE; // WIP
     endcase
     //reg_we
     unique case(op_code_i)
@@ -58,7 +75,7 @@ module decoder(
     alu_port_a_sel_o = 1'b0;
     unique case(op_code_i)
       OP_I_ALU_TYPE: begin
-        imm_o = $signed({20'b0,imm_fields_i[24:13]});
+        imm_o = {{20{imm_fields_i[24]}},imm_fields_i[24:13]};
         alu_port_b_sel_o = 1'b1;
       end
       default: imm_o = 32'b0;
