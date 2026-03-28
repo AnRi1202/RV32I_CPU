@@ -10,9 +10,9 @@ module decoder(
   output logic alu_port_b_sel_o, //rs2 or imm
   output op_alu_t alu_op_sel_o,
   output logic reg_we_o,
+  output load_store_type_t load_store_sel_o,
+  output reg_data_sel_t reg_data_sel_o,
   // output op_branch_t branch_op_sel_o
-  // output logic [2:0] is_load,
-  // output logic [1:0] is_store
   output logic [31:0] imm_o
 );
   logic funct7_bit5;
@@ -21,8 +21,6 @@ module decoder(
   always_comb begin
     //default value
     alu_op_sel_o = OP_NONE;
-    alu_port_a_sel_o =1'b0;
-    alu_port_b_sel_o =1'b0;
     reg_we_o = 1'b0;
     unique case(op_code_i)
       OP_R_TYPE: begin
@@ -41,7 +39,6 @@ module decoder(
         endcase
       end
       OP_I_ALU_TYPE: begin
-        alu_port_b_sel_o = 1'b1;
         unique case(funct3_i)
           3'b000: alu_op_sel_o = OP_ADD;
           3'b001: alu_op_sel_o = OP_SLL;
@@ -57,28 +54,66 @@ module decoder(
           default: alu_op_sel_o = OP_NONE;
         endcase
       end
-      // OP_I_LOAD_TYPE: begin
-        // unique case(funct3_i)
-        //   3'b000: is_load = OP_LB;
-        // endcase
-      // end
-      default: alu_op_sel_o = OP_NONE; // WIP
+      OP_S_TYPE, OP_I_LOAD_TYPE: begin
+        alu_op_sel_o = OP_ADD;
+      end
     endcase
+
     //reg_we
     unique case(op_code_i)
       OP_R_TYPE, OP_I_ALU_TYPE: reg_we_o = 1'b1;
       default: reg_we_o = 1'b0;
     endcase
 
+    // load_store_sel
+    load_store_sel_o = LS_N_A;
+    unique case(op_code_i)
+    OP_I_LOAD_TYPE: begin
+      unique case(funct3_i)
+        3'b000: load_store_sel_o = L_B;
+        3'b001: load_store_sel_o = L_H;
+        3'b010: load_store_sel_o = L_W;
+        3'b100: load_store_sel_o = L_BU;
+        3'b101: load_store_sel_o = L_HU;
+        default: load_store_sel_o = LS_N_A;
+      endcase
+    end
+    OP_S_TYPE: begin
+      unique case(funct3_i)
+        3'b000: load_store_sel_o = S_B;
+        3'b001: load_store_sel_o = S_H;
+        3'b010: load_store_sel_o = S_W;
+        default: load_store_sel_o = LS_N_A;
+      endcase
+    end
+    endcase
+
     //imm
     imm_o = 32'b0;
-    alu_port_a_sel_o = 1'b0;
     unique case(op_code_i)
-      OP_I_ALU_TYPE: begin
+      OP_I_ALU_TYPE, OP_I_LOAD_TYPE: begin
         imm_o = {{20{imm_fields_i[24]}},imm_fields_i[24:13]};
-        alu_port_b_sel_o = 1'b1;
+      end
+      OP_S_TYPE: begin
+        imm_o = {{20{imm_fields_i[24]}},imm_fields_i[24:18],imm_fields_i[4:0]};
       end
       default: imm_o = 32'b0;
+
+    endcase
+
+    // alu_port_a_sel_o, alu_port_a_sel_o
+    alu_port_a_sel_o =1'b0;
+    alu_port_b_sel_o =1'b0;
+    unique case(op_code_i)
+      OP_I_ALU_TYPE, OP_I_LOAD_TYPE: alu_port_b_sel_o = 1'b1;
+      default: alu_port_b_sel_o = 1'b0;
+    endcase
+    // reg_data_sel
+    reg_data_sel_o = RD_N_A;
+    unique case(op_code_i)
+      OP_R_TYPE, OP_I_ALU_TYPE: reg_data_sel_o = RD_ALU;
+      OP_I_LOAD_TYPE: reg_data_sel_o = RD_DMEM;
+      default: reg_data_sel_o = RD_N_A;
     endcase
   end
 endmodule

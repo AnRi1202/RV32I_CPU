@@ -28,8 +28,8 @@ async def tb_cpu(dut):
         cocotb.log.info(
             "cycle=%02d pc=%s alu_out=%s",
             cycle,
-            fmt32(dut.debug_pc_o.value),
-            fmt32(dut.debug_alu_output_o.value)
+            fmt32(dut.cpu.pc.value),
+            fmt32(dut.cpu.alu_output.value)
         )
 
 

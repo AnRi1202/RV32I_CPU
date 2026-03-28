@@ -10,7 +10,8 @@ VERILOG_SOURCES = ../src/risc_v_32_i_pkg.sv \
 									../src/decoder.sv \
 									../src/regfile.sv \
 									../src/data_memory.sv \
-									../src/alu.sv
+									../src/alu.sv \
+									../src/load_store_unit.sv
 
 TOPLEVEL = cpu_with_memory
 COCOTB_TEST_MODULES = tb_cpu

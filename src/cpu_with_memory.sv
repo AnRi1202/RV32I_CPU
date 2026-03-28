@@ -22,6 +22,7 @@ module cpu_with_memory #(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
     .read_data_i(read_data),
+    .write_data_o(write_data),
     .data_address_o(data_address),
     .write_enable_o(write_enable),
     .instruction_data_i(instruction_data),
