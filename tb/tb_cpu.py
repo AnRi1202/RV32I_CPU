@@ -3,8 +3,10 @@ from cocotb.triggers import RisingEdge, Timer
 from cocotb.clock import Clock
 
 
-def fmt32(value):
-    return f"0x{value.to_unsigned():08x}" if value.is_resolvable else f"0b{str(value)}"
+def fmt_sig(value):
+    if not value.is_resolvable:
+        return "X"
+    return f"0x{value.to_unsigned():08x}"
 
 
 @cocotb.test()
@@ -18,18 +20,20 @@ async def tb_cpu(dut):
     dut.rst_n_i.value = 0
 
 
-    for _ in range(5):
+    for _ in range(3):
         await RisingEdge(dut.clk_i)
     dut.rst_n_i.value = 1
 
 
-    for cycle in range(10):
+    for cycle in range(20):
         await RisingEdge(dut.clk_i)
         cocotb.log.info(
-            "cycle=%02d pc=%s alu_out=%s",
+            "cycle=%02d pc=%s alu_out=%s write_data=%s read_data=%s",
             cycle,
-            fmt32(dut.cpu.pc.value),
-            fmt32(dut.cpu.alu_output.value)
+            fmt_sig(dut.cpu.pc.value),
+            fmt_sig(dut.cpu.alu_output.value),
+            fmt_sig(dut.cpu.write_data_o.value),
+            fmt_sig(dut.cpu.read_data_i.value)
         )
 
 

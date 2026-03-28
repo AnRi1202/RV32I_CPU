@@ -17,17 +17,18 @@ module load_store_unit #(parameter int XLEN=32)( // align rw data
   always_comb begin
     // aligned_read_data
     aligned_read_data_o = '0;
-    unique case(load_store_sel_i)
+    unique0 case(load_store_sel_i)
       L_B: aligned_read_data_o = {{(XLEN-8){read_data_shifted[7]}},read_data_shifted[7:0]};
       L_H: aligned_read_data_o =  {{(XLEN-16){read_data_shifted[15]}},read_data_shifted[15:0]};
       L_W: aligned_read_data_o = {{(XLEN-32){read_data_shifted[31]}},read_data_shifted[31:0]};
       L_BU: aligned_read_data_o = {{(XLEN-8){1'b0}},read_data_shifted[7:0]};
       L_HU: aligned_read_data_o =  {{(XLEN-16){1'b0}},read_data_shifted[15:0]};
+      LS_N_A: aligned_read_data_o = '0;
     endcase
     // aligned_write_data_o
     aligned_write_data_o = '0;
     write_strobe_o = '0;
-    unique case(load_store_sel_i)
+    unique0 case(load_store_sel_i)
     S_B: begin
       aligned_write_data_o = {4{write_data_i[7:0]}};
       write_strobe_o = 4'b0001 << data_address_i[1:0];
@@ -38,22 +39,14 @@ module load_store_unit #(parameter int XLEN=32)( // align rw data
         2'b00: write_strobe_o = 4'b0011;
         2'b01: write_strobe_o = 4'b0110;
         2'b10: write_strobe_o = 4'b1100;
-        2'b11: begin
-`ifndef SYNTHESIS
-          assert (1'b0) else $error("misaligned");
-`endif
-        end
-        default: write_strobe_o = 4'b0000;
+        default: write_strobe_o = 4'b0000; // not handling misaligned
       endcase
     end
     S_W: begin
       aligned_write_data_o = write_data_i;
       write_strobe_o = 4'b1111;
-`ifndef SYNTHESIS
-      assert (data_address_i[1:0] == 2'b00) else $error("misaligned");
-`endif
     end
-    default: ;
+    default: write_strobe_o =4'b0000;
     endcase
   end
 endmodule

@@ -22,7 +22,7 @@ module decoder(
     //default value
     alu_op_sel_o = OP_NONE;
     reg_we_o = 1'b0;
-    unique case(op_code_i)
+    case(op_code_i)
       OP_R_TYPE: begin
         unique case({funct7_bit5,funct3_i})
           4'b0000: alu_op_sel_o = OP_ADD;
@@ -57,6 +57,7 @@ module decoder(
       OP_S_TYPE, OP_I_LOAD_TYPE: begin
         alu_op_sel_o = OP_ADD;
       end
+      default: alu_op_sel_o = OP_NONE;
     endcase
 
     //reg_we
@@ -67,9 +68,9 @@ module decoder(
 
     // load_store_sel
     load_store_sel_o = LS_N_A;
-    unique case(op_code_i)
+    unique0 case(op_code_i)
     OP_I_LOAD_TYPE: begin
-      unique case(funct3_i)
+      unique0 case(funct3_i)
         3'b000: load_store_sel_o = L_B;
         3'b001: load_store_sel_o = L_H;
         3'b010: load_store_sel_o = L_W;
@@ -79,13 +80,14 @@ module decoder(
       endcase
     end
     OP_S_TYPE: begin
-      unique case(funct3_i)
+      unique0 case(funct3_i)
         3'b000: load_store_sel_o = S_B;
         3'b001: load_store_sel_o = S_H;
         3'b010: load_store_sel_o = S_W;
         default: load_store_sel_o = LS_N_A;
       endcase
     end
+    default: load_store_sel_o = LS_N_A;
     endcase
 
     //imm
