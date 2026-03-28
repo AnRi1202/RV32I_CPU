@@ -5,10 +5,7 @@ module cpu #(
   parameter [8*256-1:0] IMEM_FILE="",
   parameter [8*256-1:0] DMEM_FILE=""
 ) (
-  input logic clk_i, rst_n_i,
-  input logic [XLEN-1:0] write_data_i,
-  input logic [31:0] data_address_i,
-  output logic write_enable_o
+  input logic clk_i, rst_n_i
   );
   // for program_counter
   logic [31:0] next_pc;

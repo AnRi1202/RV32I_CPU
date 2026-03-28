@@ -16,8 +16,6 @@ async def tb_cpu(dut):
 
     # Initialize
     dut.rst_n_i.value = 0
-    dut.write_data_i.value = 0
-    dut.data_address_i.value = 0
 
 
     for _ in range(5):
