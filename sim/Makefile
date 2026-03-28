@@ -2,6 +2,7 @@ TOPLEVEL_LANG = verilog
 SIM = icarus # Change your simlator
 
 VERILOG_SOURCES = ../src/risc_v_32_i_pkg.sv \
+									../src/cpu_with_memory.sv \
 									../src/program_counter.sv \
 									../src/cpu.sv \
 									../src/instruction_memory.sv \
@@ -11,7 +12,7 @@ VERILOG_SOURCES = ../src/risc_v_32_i_pkg.sv \
 									../src/data_memory.sv \
 									../src/alu.sv
 
-TOPLEVEL = cpu
+TOPLEVEL = cpu_with_memory
 COCOTB_TEST_MODULES = tb_cpu
 
 export PYTHONPATH := ../tb
@@ -21,7 +22,7 @@ DMEM_FILE ?=
 
 
 COMPILE_ARGS += -g2012
-COMPILE_ARGS += -Pcpu.IMEM_FILE=\"$(IMEM_FILE)\"
-#COMPILE_ARGS += -Pcpu.DMEM_FILE=\"$(DMEM_FILE)\"
+COMPILE_ARGS += -Pcpu_with_memory.IMEM_FILE=\"$(IMEM_FILE)\"
+COMPILE_ARGS += -Pcpu_with_memory.DMEM_FILE=\"$(DMEM_FILE)\"
 
 include $(shell cocotb-config --makefiles)/Makefile.sim

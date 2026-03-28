@@ -1,14 +1,17 @@
 import risc_v_32_i_pkg::*;
 module cpu #(
   parameter int XLEN=32,
-  parameter int REG_ADDR_WIDTH=5,
-  parameter [8*256-1:0] IMEM_FILE="",
-  parameter [8*256-1:0] DMEM_FILE=""
+  parameter int REG_ADDR_WIDTH=5
 ) (
   input logic clk_i, rst_n_i,
-  input logic [XLEN-1:0] write_data_i,
-  input logic [31:0] data_address_i,
-  output logic write_enable_o
+  // dmem
+  input logic [XLEN-1:0] read_data_i,
+  output logic [XLEN-1:0] write_data_o,
+  output logic [31:0] data_address_o,
+  output logic write_enable_o,
+  // imem
+  input logic [31:0] instruction_data_i,
+  output logic [31:0] instruction_address_o
   );
   // for program_counter
   logic [31:0] next_pc;
@@ -38,6 +41,7 @@ module cpu #(
   logic [XLEN-1:0] alu_output;
   // instance
 
+  assign instruction_address_o = pc;
   assign next_pc = pc + 32'd4;
   program_counter program_counter(
     .clk_i(clk_i),
@@ -45,13 +49,9 @@ module cpu #(
     .next_pc_i(next_pc),
     .pc_o(pc)
   );
-  instruction_memory #(.INIT_FILE(IMEM_FILE)) imem(
-    .instruction_address_i(pc),
-    .instruction_data_o(instruction_data)
-  );
 
   field_extraction fe(
-    .instruction_i(instruction_data),
+    .instruction_i(instruction_data_i),
     .opcode_o(opcode),
     .rd_o(rd),
     .rs1_o(rs1),

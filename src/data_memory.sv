@@ -5,7 +5,7 @@ module data_memory#(
   parameter int XLEN=32,
   parameter [8*256-1:0] INIT_FILE=""
 )(
-  input logic [31:0] address_i,
+  input logic [31:0] data_address_i,
   input logic [XLEN-1:0] write_data_i,
   input logic clk_i,
   input logic write_enable_i,
@@ -21,11 +21,11 @@ module data_memory#(
   `endif
 
   always_comb begin
-    read_data_o = data_mem[address_i[31:2]]; // 4word
+    read_data_o = data_mem[data_address_i[31:2]]; // 4word
   end
   always_ff @(posedge clk_i) begin
     if (write_enable_i) begin
-      data_mem[address_i[31:2]] <= write_data_i;
+      data_mem[data_address_i[31:2]] <= write_data_i;
     end
   end
 

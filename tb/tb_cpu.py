@@ -16,8 +16,6 @@ async def tb_cpu(dut):
 
     # Initialize
     dut.rst_n_i.value = 0
-    dut.write_data_i.value = 0
-    dut.data_address_i.value = 0
 
 
     for _ in range(5):
@@ -28,12 +26,10 @@ async def tb_cpu(dut):
     for cycle in range(10):
         await RisingEdge(dut.clk_i)
         cocotb.log.info(
-            "cycle=%02d pc=%s alu_a=%s alu_b=%s alu_out=%s",
+            "cycle=%02d pc=%s alu_out=%s",
             cycle,
-            fmt32(dut.pc.value),
-            fmt32(dut.alu_port_a.value),
-            fmt32(dut.alu_port_b.value),
-            fmt32(dut.alu_output.value),
+            fmt32(dut.debug_pc_o.value),
+            fmt32(dut.debug_alu_output_o.value)
         )
 
 
