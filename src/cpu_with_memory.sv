@@ -4,9 +4,7 @@ module cpu_with_memory #(
   parameter [8*256-1:0] IMEM_FILE="",
   parameter [8*256-1:0] DMEM_FILE=""
   )(
-  input logic clk_i, rst_n_i,
-  output logic [31:0] debug_pc_o,
-  output logic [XLEN-1:0] debug_alu_output_o
+  input logic clk_i, rst_n_i
   );
 
 
@@ -16,6 +14,7 @@ module cpu_with_memory #(
   logic [31:0] data_address;
   logic [31:0] write_data;
   logic write_enable;
+  logic [3:0] write_strobe;
   logic [XLEN-1:0] read_data;
 
   cpu #(.XLEN(XLEN), .REG_ADDR_WIDTH(REG_ADDR_WIDTH)) cpu(
@@ -25,6 +24,7 @@ module cpu_with_memory #(
     .write_data_o(write_data),
     .data_address_o(data_address),
     .write_enable_o(write_enable),
+    .write_strobe_o(write_strobe),
     .instruction_data_i(instruction_data),
     .instruction_address_o(instruction_address)
     );
@@ -33,10 +33,11 @@ module cpu_with_memory #(
     .instruction_address_i(instruction_address)
     );
   data_memory #(.XLEN(XLEN), .INIT_FILE(DMEM_FILE)) dmem(
+    .clk_i(clk_i),
     .data_address_i(data_address),
     .write_data_i(write_data),
-    .clk_i(clk_i),
     .write_enable_i(write_enable),
+    .write_strobe_i(write_strobe),
     .read_data_o(read_data)
     );
   endmodule

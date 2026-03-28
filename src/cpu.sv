@@ -47,7 +47,6 @@ module cpu #(
   logic [31:0] data_address;
   logic [XLEN-1:0] write_data;
   logic [XLEN-1:0] aligned_read_data;
-  logic [XLEN-1:0] aligned_write_data;
   // instance
 
   assign instruction_address_o = pc;

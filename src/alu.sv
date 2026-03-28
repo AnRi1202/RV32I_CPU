@@ -22,6 +22,7 @@ module alu #(
       OP_SLT: alu_o = ($signed(alu_port_a_i) < $signed(alu_port_b_i)) ? {{XLEN-1{1'b0}},1'b1}:{XLEN{1'b0}};
       OP_SLTU: alu_o = (alu_port_a_i < alu_port_b_i) ? {{XLEN-1{1'b0}},1'b1}: {XLEN{1'b0}};
       OP_NONE: alu_o = {XLEN{1'b0}};
+      default: alu_o = {XLEN{1'b0}};
     endcase
   end
 endmodule
