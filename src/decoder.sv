@@ -105,7 +105,7 @@ module decoder(
     alu_port_a_sel_o =1'b0;
     alu_port_b_sel_o =1'b0;
     unique case(op_code_i)
-      OP_I_ALU_TYPE, OP_I_LOAD_TYPE: alu_port_b_sel_o = 1'b1;
+      OP_I_ALU_TYPE, OP_I_LOAD_TYPE, OP_S_TYPE: alu_port_b_sel_o = 1'b1;
       default: alu_port_b_sel_o = 1'b0;
     endcase
     // reg_data_sel
