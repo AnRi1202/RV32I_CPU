@@ -10,8 +10,8 @@ typedef enum logic [6:0] {
   OP_I_JALR_TYPE = 7'b1100111,
   OP_I_FENCE_TYPE = 7'b0001111,
   OP_I_ECALL_TYPE = 7'b1110011,
-  OP_I_LUI_TYPE = 7'b0110111,
-  OP_I_AUIPC_TYPE = 7'b0010111,
+  OP_U_LUI_TYPE = 7'b0110111,
+  OP_U_AUIPC_TYPE = 7'b0010111,
   OP_J_TYPE = 7'b1101111
 } opcode_t;
 
@@ -40,10 +40,12 @@ typedef enum logic [3:0]{
   LS_N_A // none
 } load_store_type_t;
 
-typedef enum logic [1:0]{
+typedef enum logic [2:0]{
   RD_ALU,
   RD_DMEM,
   RD_COMP,
+  RD_PC_N,
+  RD_IMM, //OP_LUI
   RD_N_A
   } reg_data_sel_t;
 
@@ -59,5 +61,4 @@ typedef enum logic [4:0] {
   OP_BUNKNOWN
   } comp_sel_t;
 endpackage
-
 

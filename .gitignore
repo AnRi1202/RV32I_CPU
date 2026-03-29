@@ -2,4 +2,5 @@
 build
 sim_build
 results.xml
+synth
 __pycache__/

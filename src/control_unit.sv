@@ -5,11 +5,13 @@ module control_unit #(
 ) (
   input opcode_t op_code_i,
   input logic [2:0] funct3_i,
+  input logic comp_i,
   output logic reg_we_o,
   output reg_data_sel_t reg_data_sel_o,
   output logic alu_port_a_sel_o,
   output logic alu_port_b_sel_o,
-  output logic comp_port_b_sel_o
+  output logic comp_port_b_sel_o,
+  output logic next_pc_sel_o
 );
   always_comb begin
     alu_port_a_sel_o = 1'b0;
@@ -17,7 +19,7 @@ module control_unit #(
     comp_port_b_sel_o = 1'b0;
     //reg_we
     unique case (op_code_i)
-      OP_R_TYPE, OP_I_ALU_TYPE, OP_I_LOAD_TYPE: reg_we_o = 1'b1;
+      OP_R_TYPE, OP_I_ALU_TYPE, OP_I_LOAD_TYPE, OP_J_TYPE, OP_I_JALR_TYPE, OP_U_AUIPC_TYPE, OP_U_LUI_TYPE: reg_we_o = 1'b1;
       default: reg_we_o = 1'b0;
     endcase
     //reg_data_sel
@@ -36,19 +38,21 @@ module control_unit #(
         endcase
       end
       OP_I_LOAD_TYPE: reg_data_sel_o = RD_DMEM;
+      OP_J_TYPE, OP_I_JALR_TYPE, OP_U_AUIPC_TYPE: reg_data_sel_o = RD_PC_N;
+      OP_U_LUI_TYPE: reg_data_sel_o = RD_IMM;
       default: reg_data_sel_o = RD_N_A;
     endcase
     //alu_port_a_sel
     unique case (op_code_i)
-      OP_B_TYPE, OP_J_TYPE, OP_I_JALR_TYPE, OP_I_AUIPC_TYPE: alu_port_a_sel_o =1'b1;
+      OP_B_TYPE, OP_J_TYPE, OP_U_AUIPC_TYPE: alu_port_a_sel_o =1'b1;
       default: alu_port_a_sel_o = 1'b0;
     endcase
     //alu_port_b_sel
     unique case (op_code_i)
-      OP_I_ALU_TYPE, OP_I_LOAD_TYPE, OP_S_TYPE, OP_B_TYPE: alu_port_b_sel_o = 1'b1;
-      default: alu_port_b_sel_o = 1'b0;
+      OP_R_TYPE: alu_port_b_sel_o = 1'b0;
+      default: alu_port_b_sel_o = 1'b1;
     endcase
-
+    // comp_port_b_sel
     unique case (op_code_i)
       OP_I_ALU_TYPE: begin
         unique case (funct3_i)
@@ -57,6 +61,13 @@ module control_unit #(
         endcase
       end
       default: comp_port_b_sel_o = 1'b0;
+    endcase
+
+    // next_pc_sel
+    unique case(op_code_i)
+      OP_B_TYPE: next_pc_sel_o = comp_i;
+      OP_J_TYPE, OP_I_JALR_TYPE: next_pc_sel_o = 1'b1;
+      default: next_pc_sel_o = 1'b0;
     endcase
   end
 endmodule

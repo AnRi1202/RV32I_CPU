@@ -46,7 +46,7 @@ module decoder(
           default: alu_op_sel_o = OP_NONE;
         endcase
       end
-      OP_S_TYPE, OP_I_LOAD_TYPE, OP_B_TYPE, OP_J_TYPE, OP_I_JALR_TYPE, OP_I_AUIPC_TYPE: begin
+      OP_S_TYPE, OP_I_LOAD_TYPE, OP_B_TYPE, OP_J_TYPE, OP_I_JALR_TYPE, OP_U_AUIPC_TYPE: begin
         alu_op_sel_o = OP_ADD;
       end
       default: alu_op_sel_o = OP_NONE;
@@ -99,7 +99,7 @@ module decoder(
     //imm
     imm_o = 32'b0;
     unique case(op_code_i)
-      OP_I_ALU_TYPE, OP_I_LOAD_TYPE: begin
+      OP_I_ALU_TYPE, OP_I_LOAD_TYPE, OP_I_JALR_TYPE: begin
         imm_o = {{20{imm_fields_i[31]}},imm_fields_i[31:20]};
       end
       OP_S_TYPE: imm_o = {{20{imm_fields_i[31]}},imm_fields_i[31:25],imm_fields_i[11:7]};
@@ -108,6 +108,8 @@ module decoder(
                           imm_fields_i[7],
                           imm_fields_i[30:25],
                           imm_fields_i[11:8],1'b0};
+      OP_U_AUIPC_TYPE, OP_U_LUI_TYPE: imm_o = {imm_fields_i[31:12], 12'b0};
+      OP_J_TYPE: imm_o = {11'b0, imm_fields_i[31], imm_fields_i[19:12], imm_fields_i[20], imm_fields_i[30:21], 1'b0};
       default: imm_o = 32'b0;
 
     endcase

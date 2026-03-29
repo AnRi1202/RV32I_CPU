@@ -1,5 +1,6 @@
 //TODO: not support XLEN=64. need to fix data_memory ([3:0])
 // not supoort hardware exception
+import risc_v_32_i_pkg::*;
 module load_store_unit #(parameter int XLEN=32)( // align rw data
   // load
   input load_store_type_t load_store_sel_i,
