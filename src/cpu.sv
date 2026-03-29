@@ -14,6 +14,12 @@ module cpu #(
   input logic [31:0] instruction_data_i,
   output logic [31:0] instruction_address_o
   );
+  // registers
+  logic [31:0] ifex_instr;
+  logic [31:0] ifex_pc;
+  logic [31:0] ifex_pc4;
+
+
   // for program_counter
   logic next_pc_sel;
   logic [31:0] next_pc;
@@ -66,8 +72,18 @@ module cpu #(
     .pc_o(pc)
   );
 
+  alwyas_ff @(posedge clk_i or negedge rst_n_i) begin
+    if (!rst_n_i) begin
+      ifex_instr <= 32'b0;
+      ifex_pc <= 32'b0;
+    end else begin
+      ifex_instr <= instruction_data_i;
+      ifex_pc <= pc;
+    end
+  end
+
   field_extraction fe(
-    .instruction_i(instruction_data_i),
+    .instruction_i(ifex_instr),
     .opcode_o(opcode),
     .rd_o(rd),
     .rs1_o(rs1),
