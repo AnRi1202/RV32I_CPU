@@ -5,13 +5,10 @@ module decoder(
   input opcode_t op_code_i,
   input logic [2:0] funct3_i,
   input logic [6:0] funct7_i,
-  input logic [24:0] imm_fields_i,
-  output logic alu_port_a_sel_o, //rs1 or pc
-  output logic alu_port_b_sel_o, //rs2 or imm
+  input logic [31:7] imm_fields_i,
   output op_alu_t alu_op_sel_o,
-  output logic reg_we_o,
   output load_store_type_t load_store_sel_o,
-  output reg_data_sel_t reg_data_sel_o,
+  output comp_sel_t comp_op_sel_o,
   // output op_branch_t branch_op_sel_o
   output logic [31:0] imm_o
 );
@@ -21,15 +18,12 @@ module decoder(
   always_comb begin
     //default value
     alu_op_sel_o = OP_NONE;
-    reg_we_o = 1'b0;
     case(op_code_i)
       OP_R_TYPE: begin
         unique case({funct7_bit5,funct3_i})
           4'b0000: alu_op_sel_o = OP_ADD;
           4'b1000: alu_op_sel_o = OP_SUB;
           4'b0001: alu_op_sel_o = OP_SLL;
-          4'b0010: alu_op_sel_o = OP_SLT;
-          4'b0011: alu_op_sel_o = OP_SLTU;
           4'b0100: alu_op_sel_o = OP_XOR;
           4'b0101: alu_op_sel_o = OP_SRL;
           4'b1101: alu_op_sel_o = OP_SRA;
@@ -42,8 +36,6 @@ module decoder(
         unique case(funct3_i)
           3'b000: alu_op_sel_o = OP_ADD;
           3'b001: alu_op_sel_o = OP_SLL;
-          3'b010: alu_op_sel_o = OP_SLT;
-          3'b011: alu_op_sel_o = OP_SLTU;
           3'b100: alu_op_sel_o = OP_XOR;
           3'b101: begin
             if (funct7_bit5) alu_op_sel_o = OP_SRA;
@@ -58,12 +50,6 @@ module decoder(
         alu_op_sel_o = OP_ADD;
       end
       default: alu_op_sel_o = OP_NONE;
-    endcase
-
-    //reg_we
-    unique case(op_code_i)
-      OP_R_TYPE, OP_I_ALU_TYPE: reg_we_o = 1'b1;
-      default: reg_we_o = 1'b0;
     endcase
 
     // load_store_sel
@@ -89,33 +75,41 @@ module decoder(
     end
     default: load_store_sel_o = LS_N_A;
     endcase
+    // compare_sel
+    case(op_code_i)
+      OP_R_TYPE, OP_I_ALU_TYPE:
+        case (funct3_i)
+          3'b010: comp_op_sel_o =OP_SLT;
+          3'b011: comp_op_sel_o =OP_SLTU;
+          default: comp_op_sel_o =OP_BUNKNOWN;
+        endcase
+      OP_B_TYPE:
+        case(funct3_i)
+          3'b000: comp_op_sel_o = OP_BEQ;
+          3'b001: comp_op_sel_o = OP_BNE;
+          3'b100: comp_op_sel_o = OP_BLT;
+          3'b101: comp_op_sel_o = OP_BGE;
+          3'b110: comp_op_sel_o = OP_BLTU;
+          3'b111: comp_op_sel_o = OP_BGEU;
+          default: comp_op_sel_o =OP_BUNKNOWN;
+        endcase
+      default: comp_op_sel_o = OP_BUNKNOWN;
+    endcase
 
     //imm
     imm_o = 32'b0;
     unique case(op_code_i)
       OP_I_ALU_TYPE, OP_I_LOAD_TYPE: begin
-        imm_o = {{20{imm_fields_i[24]}},imm_fields_i[24:13]};
+        imm_o = {{20{imm_fields_i[31]}},imm_fields_i[31:20]};
       end
-      OP_S_TYPE: begin
-        imm_o = {{20{imm_fields_i[24]}},imm_fields_i[24:18],imm_fields_i[4:0]};
-      end
+      OP_S_TYPE: imm_o = {{20{imm_fields_i[31]}},imm_fields_i[31:25],imm_fields_i[11:7]};
+      OP_B_TYPE: imm_o = {{19{imm_fields_i[31]}},
+                          imm_fields_i[31],
+                          imm_fields_i[7],
+                          imm_fields_i[30:25],
+                          imm_fields_i[11:8],1'b0};
       default: imm_o = 32'b0;
 
-    endcase
-
-    // alu_port_a_sel_o, alu_port_a_sel_o
-    alu_port_a_sel_o =1'b0;
-    alu_port_b_sel_o =1'b0;
-    unique case(op_code_i)
-      OP_I_ALU_TYPE, OP_I_LOAD_TYPE, OP_S_TYPE: alu_port_b_sel_o = 1'b1;
-      default: alu_port_b_sel_o = 1'b0;
-    endcase
-    // reg_data_sel
-    reg_data_sel_o = RD_N_A;
-    unique case(op_code_i)
-      OP_R_TYPE, OP_I_ALU_TYPE: reg_data_sel_o = RD_ALU;
-      OP_I_LOAD_TYPE: reg_data_sel_o = RD_DMEM;
-      default: reg_data_sel_o = RD_N_A;
     endcase
   end
 endmodule

@@ -7,10 +7,12 @@ VERILOG_SOURCES = ../src/risc_v_32_i_pkg.sv \
 									../src/cpu.sv \
 									../src/instruction_memory.sv \
 									../src/field_extraction.sv \
+									../src/control_unit.sv \
 									../src/decoder.sv \
 									../src/regfile.sv \
 									../src/data_memory.sv \
 									../src/alu.sv \
+									../src/comparator.sv \
 									../src/load_store_unit.sv
 
 TOPLEVEL = cpu_with_memory

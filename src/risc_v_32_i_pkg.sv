@@ -24,8 +24,6 @@ typedef enum logic [ALU_OP_LEN-1:0]{
   OP_SLL,
   OP_SRL,
   OP_SRA,
-  OP_SLT,
-  OP_SLTU,
   // store
   OP_NONE
   } op_alu_t;
@@ -45,18 +43,21 @@ typedef enum logic [3:0]{
 typedef enum logic [1:0]{
   RD_ALU,
   RD_DMEM,
+  RD_COMP,
   RD_N_A
   } reg_data_sel_t;
 
-// typedef enum logic [4:0] {
-//   OP_BEQ,
-//   OP_BNE,
-//   OP_BLT,
-//   OP_BGE,
-//   OP_BLTU,
-//   OP_BGEU,
-//   OP_NONE
-//   } op_branch_t;
+typedef enum logic [4:0] {
+  OP_BEQ,
+  OP_BNE,
+  OP_BLT,
+  OP_BGE,
+  OP_BLTU,
+  OP_BGEU,
+  OP_SLT,
+  OP_SLTU,
+  OP_BUNKNOWN
+  } comp_sel_t;
 endpackage
 
 
