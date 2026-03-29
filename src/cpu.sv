@@ -1,7 +1,7 @@
 import risc_v_32_i_pkg::*;
 module cpu #(
   parameter int XLEN=32,
-  parameter int REG_ADDR_WIDTH=5
+  parameter int REG_ADDR_WIDTH=2
 ) (
   input logic clk_i, rst_n_i,
   // dmem
@@ -14,6 +14,7 @@ module cpu #(
   input logic [31:0] instruction_data_i,
   output logic [31:0] instruction_address_o
   );
+
   // for program_counter
   logic next_pc_sel;
   logic [31:0] next_pc;
