@@ -46,7 +46,7 @@ module decoder(
           default: alu_op_sel_o = OP_NONE;
         endcase
       end
-      OP_S_TYPE, OP_I_LOAD_TYPE: begin
+      OP_S_TYPE, OP_I_LOAD_TYPE, OP_B_TYPE, OP_J_TYPE, OP_I_JALR_TYPE, OP_I_AUIPC_TYPE: begin
         alu_op_sel_o = OP_ADD;
       end
       default: alu_op_sel_o = OP_NONE;

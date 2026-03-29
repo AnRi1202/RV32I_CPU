@@ -17,7 +17,7 @@ module control_unit #(
     comp_port_b_sel_o = 1'b0;
     //reg_we
     unique case (op_code_i)
-      OP_R_TYPE, OP_I_ALU_TYPE: reg_we_o = 1'b1;
+      OP_R_TYPE, OP_I_ALU_TYPE, OP_I_LOAD_TYPE: reg_we_o = 1'b1;
       default: reg_we_o = 1'b0;
     endcase
     //reg_data_sel
@@ -38,7 +38,12 @@ module control_unit #(
       OP_I_LOAD_TYPE: reg_data_sel_o = RD_DMEM;
       default: reg_data_sel_o = RD_N_A;
     endcase
-
+    //alu_port_a_sel
+    unique case (op_code_i)
+      OP_B_TYPE, OP_J_TYPE, OP_I_JALR_TYPE, OP_I_AUIPC_TYPE: alu_port_a_sel_o =1'b1;
+      default: alu_port_a_sel_o = 1'b0;
+    endcase
+    //alu_port_b_sel
     unique case (op_code_i)
       OP_I_ALU_TYPE, OP_I_LOAD_TYPE, OP_S_TYPE, OP_B_TYPE: alu_port_b_sel_o = 1'b1;
       default: alu_port_b_sel_o = 1'b0;

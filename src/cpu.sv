@@ -15,6 +15,7 @@ module cpu #(
   output logic [31:0] instruction_address_o
   );
   // for program_counter
+  logic br_taken;
   logic [31:0] next_pc;
   logic [31:0] pc;
   // for imem
@@ -57,7 +58,8 @@ module cpu #(
   // instance
 
   assign instruction_address_o = pc;
-  assign next_pc = pc + 32'd4;
+  assign br_taken = (opcode == OP_B_TYPE) && comp;
+  assign next_pc = br_taken? alu_output :pc + 32'd4;
   program_counter program_counter(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
@@ -123,7 +125,7 @@ module cpu #(
     );
     assign alu_port_a = (alu_port_a_sel == 1'b0)
                   ? read_data_1
-                  : '0;
+                  : pc;
     assign alu_port_b = (alu_port_b_sel == 1'b0)
                   ? read_data_2
                   : {{(XLEN-32){1'b0}}, imm};

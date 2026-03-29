@@ -11,9 +11,9 @@ module comparator #(parameter int XLEN=32)(
     OP_BEQ: comp_o = comp_port_a_i == comp_port_b_i;
     OP_BNE: comp_o = comp_port_a_i != comp_port_b_i;
     OP_BLT, OP_SLT: comp_o = $signed(comp_port_a_i) < $signed(comp_port_b_i);
-    OP_BGE: comp_o = $signed(comp_port_a_i) > $signed(comp_port_b_i);
+    OP_BGE: comp_o = $signed(comp_port_a_i) >= $signed(comp_port_b_i);
     OP_BLTU, OP_SLTU: comp_o = comp_port_a_i < comp_port_b_i;
-    OP_BGEU: comp_o = comp_port_a_i > comp_port_b_i;
+    OP_BGEU: comp_o = comp_port_a_i >= comp_port_b_i;
     OP_NONE: comp_o = 1'b0;
     default: comp_o = 1'b0;
     endcase
