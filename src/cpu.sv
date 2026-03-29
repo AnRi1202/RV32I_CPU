@@ -14,12 +14,6 @@ module cpu #(
   input logic [31:0] instruction_data_i,
   output logic [31:0] instruction_address_o
   );
-  // registers
-  logic [31:0] ifex_instr;
-  logic [31:0] ifex_pc;
-  logic [31:0] ifex_pc4;
-
-
   // for program_counter
   logic next_pc_sel;
   logic [31:0] next_pc;

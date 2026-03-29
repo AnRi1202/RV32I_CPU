@@ -61,5 +61,11 @@ typedef enum logic [4:0] {
   OP_SLTU,
   OP_BUNKNOWN
   } comp_sel_t;
+
+
+  // typedef struct packed {
+  //   logic [31:0] pc,
+  //   logic [31:0] instr
+  // }if_id_reg_t;
 endpackage
 
