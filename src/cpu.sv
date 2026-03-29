@@ -15,7 +15,7 @@ module cpu #(
   output logic [31:0] instruction_address_o
   );
   // for program_counter
-  logic br_taken;
+  logic next_pc_sel;
   logic [31:0] next_pc;
   logic [31:0] pc;
   // for imem
@@ -58,8 +58,7 @@ module cpu #(
   // instance
 
   assign instruction_address_o = pc;
-  assign br_taken = (opcode == OP_B_TYPE) && comp;
-  assign next_pc = br_taken? alu_output :pc + 32'd4;
+  assign next_pc = next_pc_sel ? alu_output :pc + 32'd4;
   program_counter program_counter(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
@@ -81,11 +80,13 @@ module cpu #(
   control_unit cu(
     .op_code_i(opcode),
     .funct3_i(funct3),
+    .comp_i(comp),
     .reg_we_o(reg_we),
     .reg_data_sel_o(reg_data_sel),
     .alu_port_a_sel_o(alu_port_a_sel),
     .alu_port_b_sel_o(alu_port_b_sel),
-    .comp_port_b_sel_o(comp_port_b_sel)
+    .comp_port_b_sel_o(comp_port_b_sel),
+    .next_pc_sel_o(next_pc_sel)
     );
 
   decoder dec(
@@ -105,6 +106,8 @@ module cpu #(
         RD_ALU: reg_data = alu_output;
         RD_DMEM: reg_data = aligned_read_data;
         RD_COMP: reg_data = {{(XLEN-1){1'b0}}, comp};
+        RD_PC_N: reg_data = (opcode == OP_U_AUIPC_TYPE) ? pc + imm : pc + 32'd4;
+        RD_IMM : reg_data = imm;
         default: reg_data = '0;
       endcase
     end

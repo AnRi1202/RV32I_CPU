@@ -11,7 +11,7 @@ module regfile#(
   output logic [XLEN-1:0] read_data_1_o,
   output logic [XLEN-1:0] read_data_2_o
   );
-  logic [XLEN-1:0] register [REG_ADDR_WIDTH];
+  logic [XLEN-1:0] register [(1<<REG_ADDR_WIDTH)-1:0];
   always_comb begin
     read_data_1_o = (read_address_1_i == 0) ? 0: register[read_address_1_i];
     read_data_2_o = (read_address_2_i == 0) ? 0: register[read_address_2_i];
