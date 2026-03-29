@@ -1,6 +1,7 @@
 package risc_v_32_i_pkg;
 parameter int IMM_TYPE_LEN = 3; // Bit width of opcode space
 parameter int ALU_OP_LEN = 5; // Bit width of ALU opcode space
+parameter logic [31:0] OP_NOP = 32'h00000013;
 typedef enum logic [6:0] {
   OP_R_TYPE = 7'b0110011,
   OP_B_TYPE = 7'b1100011,

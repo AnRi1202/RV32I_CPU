@@ -109,7 +109,7 @@ module decoder(
                           imm_fields_i[30:25],
                           imm_fields_i[11:8],1'b0};
       OP_U_AUIPC_TYPE, OP_U_LUI_TYPE: imm_o = {imm_fields_i[31:12], 12'b0};
-      OP_J_TYPE: imm_o = {11'b0, imm_fields_i[31], imm_fields_i[19:12], imm_fields_i[20], imm_fields_i[30:21], 1'b0};
+      OP_J_TYPE: imm_o = {{12{imm_fields_i[31]}},imm_fields_i[19:12], imm_fields_i[20], imm_fields_i[30:21], 1'b0};
       default: imm_o = 32'b0;
 
     endcase

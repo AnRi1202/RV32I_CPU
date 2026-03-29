@@ -26,6 +26,11 @@ module cpu #(
   logic [31:0] pc;
   // for imem
   logic [31:0] instruction_data;
+
+  // ID registers
+  logic [31:0] reg_pc_id;
+  logic [31:0] reg_instruction_data_id;
+
   // for field extraction
   opcode_t opcode;
   logic [4:0] rd;
@@ -63,27 +68,29 @@ module cpu #(
   logic [XLEN-1:0] aligned_read_data;
   // instance
 
-  assign instruction_address_o = pc;
-  assign next_pc = next_pc_sel ? alu_output :pc + 32'd4;
+  /* Instruction Fetch */ 
+  assign next_pc = next_pc_sel ? (alu_output & ~32'h1) : pc + 32'd4;
   program_counter program_counter(
     .clk_i(clk_i),
     .rst_n_i(rst_n_i),
     .next_pc_i(next_pc),
     .pc_o(pc)
   );
+  // access imem
+  assign instruction_address_o = pc;
 
-  alwyas_ff @(posedge clk_i or negedge rst_n_i) begin
-    if (!rst_n_i) begin
-      ifex_instr <= 32'b0;
-      ifex_pc <= 32'b0;
-    end else begin
-      ifex_instr <= instruction_data_i;
-      ifex_pc <= pc;
+    always_ff @(posedge clk_i or negedge rst_n_i) begin
+      if (!rst_n_i || next_pc_sel) begin
+        reg_pc_id<= 32'b0;
+        reg_instruction_data_id <= OP_NOP;
+      end else begin
+        reg_pc_id <= pc;
+        reg_instruction_data_id <= instruction_data_i;
+      end
     end
-  end
-
+  /* Instruction Decode */
   field_extraction fe(
-    .instruction_i(ifex_instr),
+    .instruction_i(reg_instruction_data_id),
     .opcode_o(opcode),
     .rd_o(rd),
     .rs1_o(rs1),
@@ -122,7 +129,7 @@ module cpu #(
         RD_ALU: reg_data = alu_output;
         RD_DMEM: reg_data = aligned_read_data;
         RD_COMP: reg_data = {{(XLEN-1){1'b0}}, comp};
-        RD_PC_N: reg_data = (opcode == OP_U_AUIPC_TYPE) ? pc + imm : pc + 32'd4;
+        RD_PC_N: reg_data = (opcode == OP_U_AUIPC_TYPE) ? reg_pc_id + imm : reg_pc_id + 32'd4;
         RD_IMM : reg_data = imm;
         default: reg_data = '0;
       endcase
@@ -142,9 +149,10 @@ module cpu #(
       .read_data_1_o(read_data_1),
       .read_data_2_o(read_data_2)
     );
+    /* Execute Stage */ 
     assign alu_port_a = (alu_port_a_sel == 1'b0)
                   ? read_data_1
-                  : pc;
+                  : reg_pc_id;
     assign alu_port_b = (alu_port_b_sel == 1'b0)
                   ? read_data_2
                   : {{(XLEN-32){1'b0}}, imm};
@@ -186,4 +194,5 @@ module cpu #(
     .write_strobe_o(write_strobe_o)
     );
 
+    /* Write Back Stage*/
 endmodule
