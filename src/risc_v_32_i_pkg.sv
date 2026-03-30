@@ -63,9 +63,21 @@ typedef enum logic [4:0] {
   } comp_sel_t;
 
 
-  // typedef struct packed {
-  //   logic [31:0] pc,
-  //   logic [31:0] instr
-  // }if_id_reg_t;
+  typedef struct packed {
+    logic [31:0] pc;
+    logic [31:0] instr;
+  }if_id_reg_t;
+
+  typedef struct packed{
+    logic [31:0] pc;
+    logic [XLEN-1:0] read_data_1;
+    logic [XLEN-1:0] read_data_2;
+    logic [XLEN-1:0] imm;
+    logic 
+  }id_ex_reg_t;
+
+  typedef struct packed{
+    logic []
+  }ex_mem_reg_t;
 endpackage
 

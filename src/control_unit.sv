@@ -11,6 +11,8 @@ module control_unit #(
   output logic alu_port_a_sel_o,
   output logic alu_port_b_sel_o,
   output logic comp_port_b_sel_o,
+  output logic is_load_o,
+  output logic is_store_o,
   output logic next_pc_sel_o
 );
   always_comb begin
@@ -68,6 +70,17 @@ module control_unit #(
       OP_B_TYPE: next_pc_sel_o = comp_i;
       OP_J_TYPE, OP_I_JALR_TYPE: next_pc_sel_o = 1'b1;
       default: next_pc_sel_o = 1'b0;
+    endcase
+
+    //is_store
+    unique case (op_code_i)
+      OP_S_TYPE: is_store = 1'b1;
+      default: is_store = 1'b0;
+    endcase
+    // is_load
+    unique case (op_code_i)
+      OP_I_LOAD_TYPE: is_load = 1'b1;
+      default: is_load = 1'b0;
     endcase
   end
 endmodule

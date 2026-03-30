@@ -14,6 +14,7 @@ module cpu #(
   input logic [31:0] instruction_data_i,
   output logic [31:0] instruction_address_o
   );
+  /* Instruction Fetch */
   // for program_counter
   logic next_pc_sel;
   logic [31:0] next_pc;
@@ -21,10 +22,8 @@ module cpu #(
   // for imem
   logic [31:0] instruction_data;
 
-  // ID registers
-  logic [31:0] reg_pc_id;
-  logic [31:0] reg_instruction_data_id;
-
+  if_id_reg_t if_id_reg;
+  /* Instruction Decode*/
   // for field extraction
   opcode_t opcode;
   logic [4:0] rd;
@@ -43,10 +42,13 @@ module cpu #(
   op_alu_t alu_op_sel;
   load_store_type_t load_store_sel;
   comp_sel_t comp_op_sel;
+  logic is_store, is_load;
   logic [31:0] imm;
   // for regfile
   logic [XLEN-1:0] read_data_1, read_data_2;
   logic [XLEN-1:0] reg_data;
+  id_ex_reg_t id_ex_reg;
+  /* Execute */
   // for comparator
   logic [XLEN-1:0] comp_port_a;
   logic [XLEN-1:0] comp_port_b;
@@ -56,11 +58,17 @@ module cpu #(
   logic [XLEN-1:0] alu_port_b;
   op_alu_t alu_op;
   logic [XLEN-1:0] alu_output;
+  /* Memory */
   // for load_store_unit
   logic [31:0] data_address;
   logic [XLEN-1:0] write_data;
   logic [XLEN-1:0] aligned_read_data;
   // instance
+
+  //////////////////////////////////
+  //           Logic              //
+  //////////////////////////////////
+
 
   /* Instruction Fetch */ 
   assign next_pc = next_pc_sel ? (alu_output & ~32'h1) : pc + 32'd4;
@@ -75,16 +83,16 @@ module cpu #(
 
     always_ff @(posedge clk_i or negedge rst_n_i) begin
       if (!rst_n_i || next_pc_sel) begin
-        reg_pc_id<= 32'b0;
-        reg_instruction_data_id <= OP_NOP;
+        if_id_reg.pc<= 32'b0;
+        if_id_reg.instr<= OP_NOP;
       end else begin
-        reg_pc_id <= pc;
-        reg_instruction_data_id <= instruction_data_i;
+        if_id_reg.pc<= pc;
+        if_id_reg.instr<= instruction_data_i;
       end
     end
   /* Instruction Decode */
   field_extraction fe(
-    .instruction_i(reg_instruction_data_id),
+    .instruction_i(if_id_reg.instr),
     .opcode_o(opcode),
     .rd_o(rd),
     .rs1_o(rs1),
@@ -103,6 +111,8 @@ module cpu #(
     .alu_port_a_sel_o(alu_port_a_sel),
     .alu_port_b_sel_o(alu_port_b_sel),
     .comp_port_b_sel_o(comp_port_b_sel),
+    .is_store_o(is_store),
+    .is_load_o(is_load),
     .next_pc_sel_o(next_pc_sel)
     );
 
@@ -123,7 +133,7 @@ module cpu #(
         RD_ALU: reg_data = alu_output;
         RD_DMEM: reg_data = aligned_read_data;
         RD_COMP: reg_data = {{(XLEN-1){1'b0}}, comp};
-        RD_PC_N: reg_data = (opcode == OP_U_AUIPC_TYPE) ? reg_pc_id + imm : reg_pc_id + 32'd4;
+        RD_PC_N: reg_data = (opcode == OP_U_AUIPC_TYPE) ? if_id_reg.pc+ imm : if_id_reg.pc+ 32'd4;
         RD_IMM : reg_data = imm;
         default: reg_data = '0;
       endcase
@@ -143,16 +153,28 @@ module cpu #(
       .read_data_1_o(read_data_1),
       .read_data_2_o(read_data_2)
     );
+
+    always_ff @(posedge clk_i or negedge rst_n_i) begin
+      if (!rst_n_i) begin
+        id_ex_reg.read_data_1 <= '0;
+        id_ex_reg.read_data_2 <= '0;
+        id_ex_reg.opcode <= '0;
+      end else begin
+        id_ex_reg.read_data_1 <= read_data_1;
+        id_ex_reg.read_data_2 <= read_data_2;
+        id_ex_reg.opcode <= opcode;
+      end
+    end
     /* Execute Stage */ 
     assign alu_port_a = (alu_port_a_sel == 1'b0)
-                  ? read_data_1
-                  : reg_pc_id;
+                  ? id_ex_reg.read_data_1
+                  : if_id_reg.pc;
     assign alu_port_b = (alu_port_b_sel == 1'b0)
-                  ? read_data_2
+                  ? if_id_reg.read_data_2
                   : {{(XLEN-32){1'b0}}, imm};
-    assign comp_port_a = read_data_1;
+    assign comp_port_a = if_id_reg.read_data_1;
     assign comp_port_b = (comp_port_b_sel == 1'b0)
-                  ? read_data_2
+                  ? if_id_reg.read_data_2
                   : {{(XLEN-32){1'b0}}, imm};
     // when alu use imm, comp use rs2, and vice versa
   comparator #(
@@ -171,11 +193,12 @@ module cpu #(
     .alu_op_sel_i(alu_op_sel),
     .alu_o(alu_output)
   );
+  /* Memory */
   // operand gating. 32bit cast
-  assign data_address = ((opcode == OP_S_TYPE) || (opcode ==OP_I_LOAD_TYPE)) ? alu_output[31:0] : 32'b0;
+  assign data_address = (is_store || is_load) ? alu_output[31:0] : 32'b0;
   assign data_address_o = data_address;
-  assign write_enable_o = (opcode == OP_S_TYPE) ? 1'b1: 1'b0;
-  assign write_data = (opcode == OP_S_TYPE) ? read_data_2: '0;
+  assign write_enable_o = (is_store) ? 1'b1: 1'b0;
+  assign write_data = (is_store) ? if_id_reg.read_data_2: '0;
   load_store_unit #(
     .XLEN(XLEN)
     ) lsu(
