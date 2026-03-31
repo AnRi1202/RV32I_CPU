@@ -7,6 +7,8 @@ module control_unit #(
   input logic [2:0] funct3_i,
   output logic reg_we_o,
   output reg_data_sel_t reg_data_sel_o,
+  output logic uses_rs1_o,
+  output logic uses_rs2_o,
   output logic alu_port_a_sel_o,
   output logic alu_port_b_sel_o,
   output logic comp_port_b_sel_o,
@@ -45,6 +47,21 @@ module control_unit #(
       OP_U_AUIPC_TYPE : reg_data_sel_o = RD_PCI;
       OP_U_LUI_TYPE: reg_data_sel_o = RD_IMM;
       default: reg_data_sel_o = RD_N_A;
+    endcase
+
+    //uses_rs1_o, uses_rs2_o
+    unique case (op_code_i)
+      OP_R_TYPE, OP_B_TYPE, OP_S_TYPE:begin
+        uses_rs1_o = 1'b1;
+        uses_rs2_o = 1'b1;
+      end
+      OP_I_ALU_TYPE, OP_I_LOAD_TYPE, OP_I_JALR_TYPE: begin
+        uses_rs1_o = 1'b1;
+      end
+      default: begin
+        uses_rs1_o = 1'b0;
+        uses_rs2_o = 1'b0;
+      end
     endcase
     //alu_port_a_sel
     unique case (op_code_i)

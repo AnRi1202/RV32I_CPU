@@ -23,6 +23,9 @@ export PYTHONPATH := ../tb
 IMEM_FILE ?= ../tb/hex/r_test.txt
 DMEM_FILE ?=
 
+export IMEM_FILE
+export DMEM_FILE
+
 
 COMPILE_ARGS += -g2012
 COMPILE_ARGS += -Pcpu_with_memory.IMEM_FILE=\"$(IMEM_FILE)\"
