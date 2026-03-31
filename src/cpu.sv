@@ -47,6 +47,8 @@ module cpu #(
   logic [XLEN-1:0] reg_data;
   id_ex_reg_t id_ex_reg;
   /* Execute */
+  logic [XLEN-1:0] fwd_read_data_1;
+  logic [XLEN-1:0] fwd_read_data_2;
   logic reg_we_ex;
   reg_data_sel_t reg_data_sel_ex;
   logic alu_port_a_sel_ex;
@@ -179,34 +181,55 @@ module cpu #(
 
     always_ff @(posedge clk_i or negedge rst_n_i) begin
       if (!rst_n_i) begin
-        id_ex_reg.pc <= '0;
-        id_ex_reg.read_data_1 <= '0;
-        id_ex_reg.read_data_2 <= '0;
-        id_ex_reg.imm <= '0;
-        id_ex_reg.alu_op_sel <= OP_NONE;
-        id_ex_reg.comp_op_sel <= OP_BUNKNOWN;
-        id_ex_reg.rd <= '0;
+        id_ex_reg <= '{
+          default: '0,
+          alu_op_sel: OP_NONE,
+          comp_op_sel: OP_BUNKNOWN
+        };
       end else begin
-        id_ex_reg.pc <= if_id_reg.pc;
-        id_ex_reg.read_data_1 <= read_data_1;
-        id_ex_reg.read_data_2 <= read_data_2;
-        id_ex_reg.imm <= imm;
-        id_ex_reg.alu_op_sel <= alu_op_sel_id;
-        id_ex_reg.comp_op_sel <= comp_op_sel_id;
-        id_ex_reg.rd <= rd;
+        id_ex_reg <= '{
+          pc: if_id_reg.pc,
+          read_data_1: read_data_1,
+          read_data_2: read_data_2,
+          rd: rd,
+          rs1: rs1,
+          rs2: rs2,
+          imm: imm,
+          alu_op_sel: alu_op_sel_id,
+          comp_op_sel: comp_op_sel_id
+        };
       end
     end
 
     /* Execute Stage */ 
+    // forwarding
+    always_comb begin
+      fwd_read_data_1 = id_ex_reg.read_data_1;
+      fwd_read_data_2 = id_ex_reg.read_data_2;
+
+      if (reg_we_mem && (ex_mem_reg.rd != '0) && (ex_mem_reg.rd == id_ex_reg.rs1)) begin
+        fwd_read_data_1 = ex_mem_reg.alu_output;
+      end else if (reg_we_wb && (mem_wb_reg.rd != '0) && (mem_wb_reg.rd == id_ex_reg.rs1)) begin
+        fwd_read_data_1 = reg_data;
+      end
+
+      if (reg_we_mem && (ex_mem_reg.rd != '0) && (ex_mem_reg.rd == id_ex_reg.rs2)) begin
+        fwd_read_data_2 = ex_mem_reg.alu_output;
+      end else if (reg_we_wb && (mem_wb_reg.rd != '0) && (mem_wb_reg.rd == id_ex_reg.rs2)) begin
+        fwd_read_data_2 = reg_data;
+      end
+    end
+
+    // alu inputs
     assign alu_port_a = (alu_port_a_sel_ex == 1'b0)
-                  ? id_ex_reg.read_data_1
+                  ? fwd_read_data_1
                   : id_ex_reg.pc;
     assign alu_port_b = (alu_port_b_sel_ex == 1'b0)
-                  ? id_ex_reg.read_data_2
+                  ? fwd_read_data_2
                   : {{(XLEN-32){1'b0}}, id_ex_reg.imm};
-    assign comp_port_a = id_ex_reg.read_data_1;
+    assign comp_port_a = fwd_read_data_1;
     assign comp_port_b = (comp_port_b_sel_ex == 1'b0)
-                  ? id_ex_reg.read_data_2
+                  ? fwd_read_data_2
                   : {{(XLEN-32){1'b0}}, id_ex_reg.imm};
     // when alu use imm, comp use rs2, and vice versa
   comparator #(
@@ -251,12 +274,9 @@ module cpu #(
 
   always_ff @(posedge clk_i or negedge rst_n_i) begin
     if (!rst_n_i) begin
-      ex_mem_reg.alu_output <=  '0;
-      ex_mem_reg.read_data_2 <= '0;
-      ex_mem_reg.pc <= '0;
-      ex_mem_reg.imm <= '0;
-      ex_mem_reg.rd <= '0;
-      ex_mem_reg.comp <= 1'b0;
+      ex_mem_reg <= '{
+        default: '0
+      };
 
       is_store_mem <= 1'b0;
       is_load_mem <= 1'b0;
@@ -264,12 +284,14 @@ module cpu #(
       reg_data_sel_mem <= RD_N_A;
       reg_we_mem <= '0;
     end else begin
-      ex_mem_reg.alu_output <= alu_output;
-      ex_mem_reg.read_data_2 <= id_ex_reg.read_data_2;
-      ex_mem_reg.pc <= id_ex_reg.pc;
-      ex_mem_reg.imm <= id_ex_reg.imm;
-      ex_mem_reg.rd <= id_ex_reg.rd;
-      ex_mem_reg.comp <= comp;
+      ex_mem_reg <= '{
+        alu_output: alu_output,
+        read_data_2: fwd_read_data_2,
+        pc: id_ex_reg.pc,
+        imm: id_ex_reg.imm,
+        rd: id_ex_reg.rd,
+        comp: comp
+      };
 
       load_store_sel_mem <= load_store_sel_ex;
       reg_data_sel_mem <= reg_data_sel_ex;
@@ -305,21 +327,21 @@ module cpu #(
 
     always_ff @(posedge clk_i or negedge rst_n_i) begin
     if (!rst_n_i) begin
-      mem_wb_reg.alu_output <=  '0;
-      mem_wb_reg.dmem_data <= '0;
-      mem_wb_reg.comp <= 1'b0;
-      mem_wb_reg.pc <= '0;
-      mem_wb_reg.imm <= '0;
-      mem_wb_reg.rd <= '0;
+      mem_wb_reg <= '{
+        default: '0
+      };
       reg_data_sel_wb <= RD_N_A;
       reg_we_wb <= '0;
+
     end else begin
-      mem_wb_reg.alu_output <= ex_mem_reg.alu_output;
-      mem_wb_reg.dmem_data <= aligned_read_data;
-      mem_wb_reg.comp <= ex_mem_reg.comp;
-      mem_wb_reg.pc <= ex_mem_reg.pc;
-      mem_wb_reg.imm <= ex_mem_reg.imm;
-      mem_wb_reg.rd <= ex_mem_reg.rd;
+      mem_wb_reg <= '{
+        alu_output: ex_mem_reg.alu_output,
+        dmem_data: aligned_read_data,
+        comp: ex_mem_reg.comp,
+        pc: ex_mem_reg.pc,
+        imm: ex_mem_reg.imm,
+        rd: ex_mem_reg.rd
+      };
       reg_data_sel_wb <= reg_data_sel_mem;
       reg_we_wb <= reg_we_mem;
     end

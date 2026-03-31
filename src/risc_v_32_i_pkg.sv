@@ -86,6 +86,10 @@ typedef enum logic [4:0] {
     logic [XLEN-1:0] imm;
     op_alu_t alu_op_sel;
     comp_sel_t comp_op_sel;
+    
+    // forwarding
+    logic [4:0] rs1;
+    logic [4:0] rs2;
   }id_ex_reg_t;
 
   typedef struct packed{
@@ -96,6 +100,7 @@ typedef enum logic [4:0] {
     logic [31:0] pc;
     logic [XLEN-1:0] imm;
     logic comp;
+
   }ex_mem_reg_t;
 
   typedef struct packed{
