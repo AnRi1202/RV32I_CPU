@@ -74,13 +74,13 @@ module control_unit #(
 
     //is_store
     unique case (op_code_i)
-      OP_S_TYPE: is_store = 1'b1;
-      default: is_store = 1'b0;
+      OP_S_TYPE: is_store_o = 1'b1;
+      default: is_store_o = 1'b0;
     endcase
     // is_load
     unique case (op_code_i)
-      OP_I_LOAD_TYPE: is_load = 1'b1;
-      default: is_load = 1'b0;
+      OP_I_LOAD_TYPE: is_load_o = 1'b1;
+      default: is_load_o = 1'b0;
     endcase
   end
 endmodule
