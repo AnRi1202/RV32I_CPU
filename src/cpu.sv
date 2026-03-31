@@ -67,10 +67,13 @@ module cpu #(
   logic [XLEN-1:0] alu_port_a;
   logic [XLEN-1:0] alu_port_b;
   logic [XLEN-1:0] alu_output;
+  logic [XLEN-1:0] wb_data_ex;
 
   // for next pc
   logic pc_redirect_ex;
   logic [31:0] target_pc_ex;
+  logic [31:0] branch_target_ex;
+  logic [31:0] jalr_target_ex;
   reg_data_sel_t reg_data_sel_mem;
   /* Memory */
   ex_mem_reg_t ex_mem_reg;
@@ -222,14 +225,14 @@ module cpu #(
       fwd_read_data_1 = id_ex_reg.read_data_1;
       fwd_read_data_2 = id_ex_reg.read_data_2;
 
-      if (reg_we_mem && (ex_mem_reg.rd != '0) && (ex_mem_reg.rd == id_ex_reg.rs1)) begin
-        fwd_read_data_1 = ex_mem_reg.alu_output;
+      if (reg_we_mem && !is_load_mem && (ex_mem_reg.rd != '0) && (ex_mem_reg.rd == id_ex_reg.rs1)) begin
+        fwd_read_data_1 = ex_mem_reg.wb_data;
       end else if (reg_we_wb && (mem_wb_reg.rd != '0) && (mem_wb_reg.rd == id_ex_reg.rs1)) begin
         fwd_read_data_1 = reg_data;
       end
 
-      if (reg_we_mem && (ex_mem_reg.rd != '0) && (ex_mem_reg.rd == id_ex_reg.rs2)) begin
-        fwd_read_data_2 = ex_mem_reg.alu_output;
+      if (reg_we_mem && !is_load_mem && (ex_mem_reg.rd != '0) && (ex_mem_reg.rd == id_ex_reg.rs2)) begin
+        fwd_read_data_2 = ex_mem_reg.wb_data;
       end else if (reg_we_wb && (mem_wb_reg.rd != '0) && (mem_wb_reg.rd == id_ex_reg.rs2)) begin
         fwd_read_data_2 = reg_data;
       end
@@ -264,6 +267,21 @@ module cpu #(
     .alu_o(alu_output)
   );
 
+  assign branch_target_ex = id_ex_reg.pc + id_ex_reg.imm;
+  assign jalr_target_ex = (fwd_read_data_1 + id_ex_reg.imm) & ~32'h1;
+
+  always_comb begin
+    wb_data_ex = '0;
+    unique case(reg_data_sel_ex)
+      RD_ALU: wb_data_ex = alu_output;
+      RD_COMP: wb_data_ex = {{(XLEN-1){1'b0}}, comp};
+      RD_PC4: wb_data_ex = id_ex_reg.pc + 32'd4;
+      RD_PCI: wb_data_ex = id_ex_reg.pc + id_ex_reg.imm;
+      RD_IMM: wb_data_ex = id_ex_reg.imm;
+      default: wb_data_ex = '0;
+    endcase
+  end
+
   always_comb begin
     pc_redirect_ex = 1'b0;
     target_pc_ex = '0;
@@ -273,15 +291,15 @@ module cpu #(
       end
       PC_BRANCH: begin
         pc_redirect_ex = comp;
-        target_pc_ex = alu_output;
+        target_pc_ex = branch_target_ex;
       end
       PC_JUMPR: begin
         pc_redirect_ex = 1'b1;
-        target_pc_ex = alu_output & ~32'h1;
+        target_pc_ex = jalr_target_ex;
       end
       default : begin
         pc_redirect_ex = 1'b1;
-        target_pc_ex = alu_output;
+        target_pc_ex = branch_target_ex;
       end
     endcase
   end
@@ -290,6 +308,7 @@ module cpu #(
   always_ff @(posedge clk_i or negedge rst_n_i) begin
     if (!rst_n_i || stall_id) begin
       ex_mem_reg.alu_output <= '0;
+      ex_mem_reg.wb_data <= '0;
       ex_mem_reg.read_data_2 <= '0;
       ex_mem_reg.pc <= '0;
       ex_mem_reg.imm <= '0;
@@ -303,6 +322,7 @@ module cpu #(
       reg_we_mem <= '0;
     end else begin
       ex_mem_reg.alu_output <= alu_output;
+      ex_mem_reg.wb_data <= wb_data_ex;
       ex_mem_reg.read_data_2 <= fwd_read_data_2;
       ex_mem_reg.pc <= id_ex_reg.pc;
       ex_mem_reg.imm <= id_ex_reg.imm;
@@ -344,21 +364,15 @@ module cpu #(
 
     always_ff @(posedge clk_i or negedge rst_n_i) begin
     if (!rst_n_i || stall_id) begin
-      mem_wb_reg.alu_output <= '0;
+      mem_wb_reg.wb_data <= '0;
       mem_wb_reg.dmem_data <= '0;
-      mem_wb_reg.comp <= 1'b0;
-      mem_wb_reg.pc <= '0;
-      mem_wb_reg.imm <= '0;
       mem_wb_reg.rd <= '0;
       reg_data_sel_wb <= RD_N_A;
       reg_we_wb <= '0;
 
     end else begin
-      mem_wb_reg.alu_output <= ex_mem_reg.alu_output;
+      mem_wb_reg.wb_data <= ex_mem_reg.wb_data;
       mem_wb_reg.dmem_data <= aligned_read_data;
-      mem_wb_reg.comp <= ex_mem_reg.comp;
-      mem_wb_reg.pc <= ex_mem_reg.pc;
-      mem_wb_reg.imm <= ex_mem_reg.imm;
       mem_wb_reg.rd <= ex_mem_reg.rd;
       reg_data_sel_wb <= reg_data_sel_mem;
       reg_we_wb <= reg_we_mem;
@@ -367,15 +381,6 @@ module cpu #(
 
     /* Write Back Stage*/
     always_comb begin
-      reg_data = '0;
-      unique case(reg_data_sel_wb)
-        RD_ALU: reg_data = mem_wb_reg.alu_output;
-        RD_DMEM: reg_data = mem_wb_reg.dmem_data;
-        RD_COMP: reg_data = {{(XLEN-1){1'b0}}, mem_wb_reg.comp};
-        RD_PC4: reg_data = mem_wb_reg.pc+ 32'd4;
-        RD_PCI: reg_data = mem_wb_reg.pc + mem_wb_reg.imm;  
-        RD_IMM : reg_data = mem_wb_reg.imm;
-        default: reg_data = '0;
-      endcase
+      reg_data = (reg_data_sel_wb == RD_DMEM) ? mem_wb_reg.dmem_data : mem_wb_reg.wb_data;
     end
 endmodule

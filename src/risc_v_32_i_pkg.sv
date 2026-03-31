@@ -94,6 +94,7 @@ typedef enum logic [4:0] {
 
   typedef struct packed{
     logic [XLEN-1:0] alu_output;
+    logic [XLEN-1:0] wb_data;
     logic [XLEN-1:0] read_data_2;
     // for WB
     logic [4:0] rd;
@@ -105,10 +106,7 @@ typedef enum logic [4:0] {
 
   typedef struct packed{
     logic [4:0] rd;
-    logic [XLEN-1:0] alu_output;
+    logic [XLEN-1:0] wb_data;
     logic [XLEN-1:0] dmem_data;
-    logic [31:0] pc;
-    logic [XLEN-1:0] imm;
-    logic comp;
   }mem_wb_reg_t;
 endpackage
