@@ -12,8 +12,7 @@ module control_unit #(
   output logic comp_port_b_sel_o,
   output logic is_load_o,
   output logic is_store_o,
-  output next_pc_sel_t next_pc_sel_o,
-  output logic is_auipc_o
+  output next_pc_sel_t next_pc_sel_o
 );
   always_comb begin
     alu_port_a_sel_o = 1'b0;
@@ -42,7 +41,8 @@ module control_unit #(
         endcase
       end
       OP_I_LOAD_TYPE: reg_data_sel_o = RD_DMEM;
-      OP_J_TYPE, OP_I_JALR_TYPE, OP_U_AUIPC_TYPE: reg_data_sel_o = RD_PC_N;
+      OP_J_TYPE, OP_I_JALR_TYPE : reg_data_sel_o = RD_PC4;
+      OP_U_AUIPC_TYPE : reg_data_sel_o = RD_PCI;
       OP_U_LUI_TYPE: reg_data_sel_o = RD_IMM;
       default: reg_data_sel_o = RD_N_A;
     endcase
@@ -81,7 +81,5 @@ module control_unit #(
       OP_I_LOAD_TYPE: is_load_o = 1'b1;
       default: is_load_o = 1'b0;
     endcase
-    //is_auipc
-    is_auipc_o = (op_code_i == OP_U_AUIPC_TYPE);
   end
 endmodule

@@ -36,7 +36,6 @@ module cpu #(
   logic alu_port_b_sel_id;
   logic comp_port_b_sel_id;
   logic is_store_id, is_load_id;
-  logic is_auipc_id;
   next_pc_sel_t next_pc_sel_id;
   // for decoder
   op_alu_t alu_op_sel_id;
@@ -53,8 +52,6 @@ module cpu #(
   logic alu_port_a_sel_ex;
   logic alu_port_b_sel_ex;
   logic comp_port_b_sel_ex;
-  logic is_store_ex, is_load_ex;
-  logic is_auipc_ex;
   next_pc_sel_t next_pc_sel_ex;
   load_store_type_t load_store_sel_ex;
   // for comparator
@@ -73,7 +70,6 @@ module cpu #(
   /* Memory */
   ex_mem_reg_t ex_mem_reg;
   logic is_store_mem, is_load_mem;
-  logic is_auipc_mem;
   load_store_type_t load_store_sel_mem;
   logic reg_we_mem;
   // for load_store_unit
@@ -84,7 +80,6 @@ module cpu #(
   /* Write Back */
   mem_wb_reg_t mem_wb_reg;
   reg_data_sel_t reg_data_sel_wb;
-  logic is_auipc_wb;
   logic reg_we_wb;
   //////////////////////////////////
   //           Logic              //
@@ -133,7 +128,6 @@ module cpu #(
     .comp_port_b_sel_o(comp_port_b_sel_id),
     .is_store_o(is_store_id),
     .is_load_o(is_load_id),
-    .is_auipc_o(is_auipc_id),
     .next_pc_sel_o(next_pc_sel_id)
     );
 
@@ -144,9 +138,6 @@ module cpu #(
       alu_port_a_sel_ex <= '0;
       alu_port_b_sel_ex <= '0;
       comp_port_b_sel_ex <= '0;
-      is_store_ex <='0;
-      is_load_ex<='0;
-      is_auipc_ex <= 1'b0;
       next_pc_sel_ex <= PC_NEXT;
       load_store_sel_ex <= LS_N_A;
     end else begin
@@ -155,9 +146,6 @@ module cpu #(
       alu_port_a_sel_ex <= alu_port_a_sel_id;
       alu_port_b_sel_ex <= alu_port_b_sel_id;
       comp_port_b_sel_ex <= comp_port_b_sel_id;
-      is_store_ex <= is_store_id;
-      is_load_ex  <= is_load_id;
-      is_auipc_ex <= is_auipc_id;
       next_pc_sel_ex <= next_pc_sel_id;
       load_store_sel_ex <= load_store_sel_id;
     end
@@ -272,7 +260,6 @@ module cpu #(
 
       is_store_mem <= 1'b0;
       is_load_mem <= 1'b0;
-      is_auipc_mem <= 1'b0;
       load_store_sel_mem <= LS_N_A;
       reg_data_sel_mem <= RD_N_A;
       reg_we_mem <= '0;
@@ -284,9 +271,6 @@ module cpu #(
       ex_mem_reg.rd <= id_ex_reg.rd;
       ex_mem_reg.comp <= comp;
 
-      is_store_mem <= is_store_ex;
-      is_load_mem <=  is_load_ex;
-      is_auipc_mem <= is_auipc_ex;
       load_store_sel_mem <= load_store_sel_ex;
       reg_data_sel_mem <= reg_data_sel_ex;
       reg_we_mem <= reg_we_ex;
@@ -294,6 +278,14 @@ module cpu #(
   end
   /* Memory */
   // operand gating. 32bit cast
+  always_comb begin
+    is_load_mem = 1'b0;
+    is_store_mem = 1'b0;
+    unique case(load_store_sel_mem)
+      L_B, L_H, L_W, L_BU, L_HU: is_load_mem = 1'b1;
+      S_B, S_H, S_W : is_store_mem = 1'b1;
+    endcase
+  end
   assign data_address = (is_store_mem || is_load_mem) ? ex_mem_reg.alu_output[31:0] : 32'b0;
   assign data_address_o = data_address;
   assign write_enable_o = (is_store_mem) ? 1'b1: 1'b0;
@@ -321,7 +313,6 @@ module cpu #(
       mem_wb_reg.rd <= '0;
       reg_data_sel_wb <= RD_N_A;
       reg_we_wb <= '0;
-      is_auipc_wb <= 1'b0;
     end else begin
       mem_wb_reg.alu_output <= ex_mem_reg.alu_output;
       mem_wb_reg.dmem_data <= aligned_read_data;
@@ -331,7 +322,6 @@ module cpu #(
       mem_wb_reg.rd <= ex_mem_reg.rd;
       reg_data_sel_wb <= reg_data_sel_mem;
       reg_we_wb <= reg_we_mem;
-      is_auipc_wb <= is_auipc_mem;
     end
   end  
 
@@ -342,7 +332,8 @@ module cpu #(
         RD_ALU: reg_data = mem_wb_reg.alu_output;
         RD_DMEM: reg_data = mem_wb_reg.dmem_data;
         RD_COMP: reg_data = {{(XLEN-1){1'b0}}, mem_wb_reg.comp};
-        RD_PC_N: reg_data = (is_auipc_wb) ? mem_wb_reg.pc+ mem_wb_reg.imm : mem_wb_reg.pc+ 32'd4;
+        RD_PC4: reg_data = mem_wb_reg.pc+ 32'd4;
+        RD_PCI: reg_data = mem_wb_reg.pc + mem_wb_reg.imm;  
         RD_IMM : reg_data = mem_wb_reg.imm;
         default: reg_data = '0;
       endcase

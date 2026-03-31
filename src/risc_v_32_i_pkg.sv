@@ -46,7 +46,8 @@ typedef enum logic [2:0]{
   RD_ALU,
   RD_DMEM,
   RD_COMP,
-  RD_PC_N,
+  RD_PC4,
+  RD_PCI,
   RD_IMM, //OP_LUI
   RD_N_A
   } reg_data_sel_t;
