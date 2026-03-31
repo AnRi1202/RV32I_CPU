@@ -2,6 +2,7 @@ package risc_v_32_i_pkg;
 parameter int IMM_TYPE_LEN = 3; // Bit width of opcode space
 parameter int ALU_OP_LEN = 5; // Bit width of ALU opcode space
 parameter logic [31:0] OP_NOP = 32'h00000013;
+parameter int XLEN=32;
 typedef enum logic [6:0] {
   OP_R_TYPE = 7'b0110011,
   OP_B_TYPE = 7'b1100011,
@@ -63,6 +64,14 @@ typedef enum logic [4:0] {
   } comp_sel_t;
 
 
+  typedef enum logic [1:0] {
+    PC_NEXT,
+    PC_BRANCH,
+    PC_JUMP,
+    PC_JUMPR
+  } next_pc_sel_t;
+
+
   typedef struct packed {
     logic [31:0] pc;
     logic [31:0] instr;
@@ -72,12 +81,28 @@ typedef enum logic [4:0] {
     logic [31:0] pc;
     logic [XLEN-1:0] read_data_1;
     logic [XLEN-1:0] read_data_2;
+    logic [4:0] rd;
     logic [XLEN-1:0] imm;
-    logic 
+    op_alu_t alu_op_sel;
+    comp_sel_t comp_op_sel;
   }id_ex_reg_t;
 
   typedef struct packed{
-    logic []
+    logic [XLEN-1:0] alu_output;
+    logic [XLEN-1:0] read_data_2;
+    // for WB
+    logic [4:0] rd;
+    logic [31:0] pc;
+    logic [XLEN-1:0] imm;
+    logic comp;
   }ex_mem_reg_t;
-endpackage
 
+  typedef struct packed{
+    logic [4:0] rd;
+    logic [XLEN-1:0] alu_output;
+    logic [XLEN-1:0] dmem_data;
+    logic [31:0] pc;
+    logic [XLEN-1:0] imm;
+    logic comp;
+  }mem_wb_reg_t;
+endpackage

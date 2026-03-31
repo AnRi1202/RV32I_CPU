@@ -5,7 +5,6 @@ module control_unit #(
 ) (
   input opcode_t op_code_i,
   input logic [2:0] funct3_i,
-  input logic comp_i,
   output logic reg_we_o,
   output reg_data_sel_t reg_data_sel_o,
   output logic alu_port_a_sel_o,
@@ -13,12 +12,15 @@ module control_unit #(
   output logic comp_port_b_sel_o,
   output logic is_load_o,
   output logic is_store_o,
-  output logic next_pc_sel_o
+  output next_pc_sel_t next_pc_sel_o,
+  output logic is_auipc_o
 );
   always_comb begin
     alu_port_a_sel_o = 1'b0;
     alu_port_b_sel_o = 1'b0;
     comp_port_b_sel_o = 1'b0;
+    is_store_o = 1'b0;
+    is_load_o = 1'b0;
     //reg_we
     unique case (op_code_i)
       OP_R_TYPE, OP_I_ALU_TYPE, OP_I_LOAD_TYPE, OP_J_TYPE, OP_I_JALR_TYPE, OP_U_AUIPC_TYPE, OP_U_LUI_TYPE: reg_we_o = 1'b1;
@@ -67,20 +69,19 @@ module control_unit #(
 
     // next_pc_sel
     unique case(op_code_i)
-      OP_B_TYPE: next_pc_sel_o = comp_i;
-      OP_J_TYPE, OP_I_JALR_TYPE: next_pc_sel_o = 1'b1;
-      default: next_pc_sel_o = 1'b0;
+      OP_B_TYPE: next_pc_sel_o = PC_BRANCH;
+      OP_J_TYPE: next_pc_sel_o = PC_JUMP;
+      OP_I_JALR_TYPE: next_pc_sel_o = PC_JUMPR;
+      default: next_pc_sel_o = PC_NEXT;
     endcase
-
     //is_store
-    unique case (op_code_i)
-      OP_S_TYPE: is_store = 1'b1;
-      default: is_store = 1'b0;
-    endcase
+    is_store_o = (op_code_i == OP_S_TYPE);
     // is_load
     unique case (op_code_i)
-      OP_I_LOAD_TYPE: is_load = 1'b1;
-      default: is_load = 1'b0;
+      OP_I_LOAD_TYPE: is_load_o = 1'b1;
+      default: is_load_o = 1'b0;
     endcase
+    //is_auipc
+    is_auipc_o = (op_code_i == OP_U_AUIPC_TYPE);
   end
 endmodule
